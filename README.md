@@ -13,16 +13,40 @@ The *login.sql
 
 Enviroment files
 
-* login.sql
- *  - Use this file to format the SQL*Plus's login preferences
-              Set the OS variable: DEFINE OS=Linux or DEFINE OS=Windows.
+* login.sql - Use this file to format the SQL*Plus's login preferences
+```
+    Set the OS variable: 
+        DEFINE OS=Linux  
+        DEFINE OS=Windows.
+```
 
 Sql files
 
- * constraints.sql
- * dbafreespace[d].sql
- * detalhesql.sql
- * detalheuser.sql
+ * constraints.sql - List the constraints associated to a table
+```
+    @constraints <owner> <table> 
+        owner - the name of the schema   
+        table - the name of table(s) to be queried - can use wild cards
+    e.g.
+        @constraints USR_TESTE T%
+```
+ 
+ * dbafreespace[d].sql - List information about tablespace's free space. For a more detailed report use dbafreespaced.
+```
+    @dbafreespace <tablespace> 
+        tablespace - the name of tablespace(s) to be queried - can use wild cards
+    e.g.
+        @dbafreespace %
+        @dbafreespaced SYSTEM
+```
+ 
+ * detalhesql.sql - Report source and exections statistics of a statement
+```
+    @detalhesql <sql_id> 
+        sql_id - SQL identifier. See [tops.sql]
+    e.g.
+        @detalhesql 62jd0x1sdk42m
+```
  * dginst.sql
  * dpmonit.sql
  * expplan.sql
