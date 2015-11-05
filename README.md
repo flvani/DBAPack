@@ -60,7 +60,9 @@ Sql files
  * getsqltxt.sql
  * histconn.sql
  * indexes.sql
+ * jobs[a].sql
  * limpaobjuser.sql
+ * links.sql
  * lockmon.sql
  * login.sql
  * longall.sql
@@ -73,13 +75,14 @@ Sql files
  * privobj.sql
  * privuser[d].sql
  * resumable.sql
+ * sched.sql
  * sessionwaits.sql
  * sesstat.sql
  * showplan.sql
  * showsga[c].sql
  * sort.sql
  * stragg.sql
- * tops[|a|ab|b|k].sql
+ * tops[a|ab|b|k].sql
  * triggers.sql
  
 ## Installation
