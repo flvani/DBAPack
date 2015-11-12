@@ -71,6 +71,7 @@ COLUMN tipo                format a15
 COLUMN notnull             format a7
 COLUMN coluna              format a30
 COLUMN comments            format a80
+COLUMN JOB_NAME            format a30
 
 DEFINE _editor=&p_txt_editor.
 

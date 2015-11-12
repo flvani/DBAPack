@@ -22,6 +22,9 @@ Enviroment files
 
 Sql files
 
+ * asm[op].sql - ASM info
+ * circuits.sql - Shared conection info
+ 
  * constraints.sql - List the constraints associated to a table
 ```
     @constraints <owner> <table> 
@@ -48,9 +51,12 @@ Sql files
         @detalhesql 62jd0x1sdk42m
 ```
  * dginst.sql
+ * dir.sql - Directory info
  * dpmonit.sql
+ * excludes.sql - List avaliable sections for use in expdp/impdp.
  * expplan.sql
  * fknoindex.sql
+ * getDDLTablespaces.sql
  * getcursor[d].sql
  * getddl.sql
  * getfontes.sql
@@ -74,6 +80,8 @@ Sql files
  * parseas.sql
  * privobj.sql
  * privuser[d].sql
+ * recursos.sql
+ * redosec.sql
  * resumable.sql
  * sched.sql
  * sessionwaits.sql
