@@ -6,7 +6,8 @@ col classe format a10
 col moving format a50 head "Estatisticas (Variação durante a execução do comando)"
 col cls_where new_value cls_where 
 define p_sid = &1.
-define p_classe = &2.
+define p_inst = &2.
+define p_classe = &3.
 
 set termout off
 select 
@@ -26,10 +27,11 @@ AS SELECT
    ,n.name 
    ,decode( n.class, 1, 'User', 2, 'Redo', 4, 'Enqueue', 72, 'Cache', 
                      8, 'Cache', 16, 'OS', 32, 'RAC', 64, 'SQL', 128, 'Debug', 'Outra' ) classe
-from v$statname n, v$sesstat s
-where s.statistic# = n.statistic#
+from gv$statname n, gv$sesstat s
+where s.statistic# = n.statistic# and s.inst_id = n.inst_id
 and s.value > 0
 and s.sid = &p_sid.
+and s.inst_id = &p_inst
 /
 
 CREATE GLOBAL TEMPORARY TABLE TMP_S2 
@@ -44,10 +46,11 @@ SELECT
    ,n.name 
    ,decode( n.class, 1, 'User', 2, 'Redo', 4, 'Enqueue', 72, 'Cache', 
                      8, 'Cache', 16, 'OS', 32, 'RAC', 64, 'SQL', 128, 'Debug', 'Outra' ) classe
-from v$statname n, v$sesstat s
-where s.statistic# = n.statistic#
+from gv$statname n, gv$sesstat s
+where s.statistic# = n.statistic# and s.inst_id = n.inst_id
 and s.value > 0
 and s.sid = &p_sid.
+and s.inst_id = &p_inst
 /
 
 break on class skip 1
@@ -63,10 +66,11 @@ select
    decode(sign(1e+06-s.value), -1, to_char(s.value/1e+03, 'fm999g999g999' ) || 'K',
    to_char(s.value, 'fm999g999g999' )  ) ) ), 15, ' ' ) || ' of ' || initcap( n.name ) name,
    decode( n.class, 1, 'User', 2, 'Redo', 4, 'Enqueue', 72, 'Cache', 8, 'Cache', 16, 'OS', 32, 'RAC', 64, 'SQL', 128, 'Debug', 'Outra' ) classe
-from v$statname n, v$sesstat s
-where s.statistic# = n.statistic#
+from gv$statname n, gv$sesstat s
+where s.statistic# = n.statistic# and s.inst_id = n.inst_id
 and s.value > 0
 and s.sid = &p_sid.
+and s.inst_id = &p_inst
 order by n.class, s.value desc
 )
 &cls_where.
@@ -80,10 +84,11 @@ SELECT
    ,n.name 
    ,decode( n.class, 1, 'User', 2, 'Redo', 4, 'Enqueue', 72, 'Cache', 
                      8, 'Cache', 16, 'OS', 32, 'RAC', 64, 'SQL', 128, 'Debug', 'Outra' ) classe
-from v$statname n, v$sesstat s
-where s.statistic# = n.statistic#
+from gv$statname n, gv$sesstat s
+where s.statistic# = n.statistic# and s.inst_id = n.inst_id
 and s.value > 0
 and s.sid = &p_sid.
+and s.inst_id = &p_inst
 /
 
 PROMPT DELTA
@@ -114,7 +119,7 @@ DROP TABLE TMP_S1;
 DROP TABLE TMP_S2;
 
 PROMPT
-PROMPT EXECUTADO @sesstat &p_sid. &p_classe.
+PROMPT EXECUTADO @sesstat &p_sid. &p_inst. &p_classe.
 PROMPT
 
 set pages 66 verify on feed 6
