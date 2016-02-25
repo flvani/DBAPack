@@ -1,5 +1,6 @@
+set feed off verify off
 define sqlid=&1.
-prompt enter start and end times in format DD/MM/YYYY [HH24:MI]
+rem prompt enter start and end times in format DD/MM/YYYY [HH24:MI]
   
 column sample_end format a21
 select to_char(min(s.end_interval_time),'DD/MM/YYYY DY HH24:MI') sample_end

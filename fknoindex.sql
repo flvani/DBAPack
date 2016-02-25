@@ -108,7 +108,7 @@ BEGIN
         AND   CONSTRAINT_NAME  = R.CONSTRAINT_NAME
         ORDER BY POSITION
       )
-      SELECT WM_CONCAT( V.COLUNA ) -- stragg
+      SELECT STRAGG( V.COLUNA ) -- stragg
       INTO V_COLUNAS
       FROM V;
 
