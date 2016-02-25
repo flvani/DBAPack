@@ -10,7 +10,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 
 ### This section intends to be a quick reference guide to the scripts:
 
-Enviroment files
+#### Enviroment files:
 
 * **login.sql** - Use this file to format the SQL*Plus's login preferences
 ```
@@ -18,7 +18,7 @@ Enviroment files
         DEFINE OS=Linux  
         DEFINE OS=Windows.
 ```
-Sql files
+#### Sql files:
 
  * **asm[op].sql** - ASM info
  * **awrsql.sql** - Historical information about execution plan for a single SQL, gathered from AWR repo.
