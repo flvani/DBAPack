@@ -94,7 +94,7 @@ Sql files
         c:\cria.tablespaces.<pattern>.sql
 ```
   
- * getcursor[d].sql - List, in descending order of Logical IO, of the cached cursors for a session. The script getcursord include even cursores with low number of reads.
+ * **getcursor[d].sql** - List, in descending order of Logical IO, of the cached cursors for a session. The script getcursord include even cursores with low number of reads.
 ```
     @getcursor <sid> <inst>
         sid - session identifier
@@ -102,7 +102,7 @@ Sql files
     e.g.
         @getcursor 1127 1
 ```
- * getddl.sql - Invokes dbms_metadata to extract the DDL for an object. For non-schema objects, such as, tablespaces, the last argument should be an asterisk (\*).
+ * **getddl.sql** - Invokes dbms_metadata to extract the DDL for an object. For non-schema objects, such as, tablespaces, the last argument should be an asterisk (\*).
 ```
     @getddl <objtype> <objowner> <objname>
         objtype - type of the object
@@ -114,7 +114,7 @@ Sql files
         @getddl db_link usr_ecomm mylink.domain
         @getddl tablespace system *
 ```
- * getfontes.sql - Extracts the source for one or more PL/Sql objects of a schema. The script requires a subfolder named *fontes* in which the output files will be placed. Inside it, a folder for each type of object will be created and each object will have its own file.
+ * **getfontes.sql** - Extracts the source for one or more PL/Sql objects of a schema. The script requires a subfolder named *fontes* in which the output files will be placed. Inside it, a folder for each type of object will be created and each object will have its own file.
 ```
     @getfontes <schema> <objname>
         schema - the owner of the object(s);
@@ -125,11 +125,10 @@ Sql files
     output file:
        ./fontes/<schema>/<object-type>/<objname>.sql
 ```
- * getpfile.sql - Produces a list of the non-default parameter set in the database. The output can be used to create a parameter file. Deprecated parameter are marked *(--)*.
+ * **getpfile.sql** - Produces a list of the non-default parameter set in the database. The output can be used to create a parameter file. Deprecated parameter are marked *(--)*.
  
- * getplan.sql
- * getsql.sql
- * getsqltxt.sql
+ * **getsql.sql**
+ * **getsqltxt.sql**
  * histconn.sql
  * indexes.sql
  * jobs[a].sql
