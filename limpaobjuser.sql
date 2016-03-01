@@ -3,7 +3,7 @@ PARA MATAR TABELAS ORFAS DO ADVANCED QUEUE.
 alter session set events '10851 trace name context forever, level 2';
 drop table xxxx;
 */
-
+UNDEFINE P_OWNER
 SET DEFINE ON SERVEROUT ON VERIFY OFF
 ACCEPT P_OWNER PROMPT "Informe o Nome do Usuário: "
 

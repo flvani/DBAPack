@@ -12,7 +12,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 
 #### Enviroment files:
 
-* **login.sql** - Use this file to format the SQL*Plus's login preferences
+* **login.sql** - Use this file to format the SQL*Plus's login preferences.
 ```
     Set the OS variable: 
         DEFINE OS=Linux  
@@ -20,7 +20,12 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
 #### Sql files:
 
- * **asm[op].sql** - ASM info
+ * **asm[op].sql** - ASM info. The *asmop* scripts reports only ASM operations.
+```
+    e.g.
+        @asm
+        @asmop
+```
  * **awrsql.sql** - Historical information about execution plan for a single SQL, gathered from AWR repo.
 ```
     @awrsql <sql_id> 
@@ -30,7 +35,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
  * **circuits.sql** - Shared conection info
  
- * **constraints.sql** - List the constraints associated to a table
+ * **constraints.sql** - List the constraints associated to a table.
 ```
     @constraints <owner> <table> 
         owner - the name of the schema   
@@ -39,7 +44,8 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @constraints USR_TESTE T%
 ```
  
- * **dbafreespace[d].sql** - List information about tablespace's free space. For a more detailed report use dbafreespaced.
+ * **data.sql** - Modifies the date format and prints sysdate.
+ *  **dbafreespace[d].sql** - List information about tablespace's free space. For a more detailed report use the *dbafreespaced* script.
 ```
     @dbafreespace <tablespace> 
         tablespace - the name of tablespace(s) to be queried - can use wild cards
@@ -48,7 +54,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @dbafreespaced SYSTEM
 ```
  
- * **detalhesql.sql** - Report source and executions statistics of a statement
+ * **detalhesql.sql** - Reports source and execution statistics of a statement.
 ```
     @detalhesql <sql_id> 
         sql_id - SQL identifier. See [tops.sql]
@@ -57,8 +63,8 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
  * **dginst.sql** - Information on running instances and Data Guard status.
  * **dir.sql** - Directory information.
- * **dpmonit.sql** - Datapump monitor - Information on running Data Pump jobs
- * **excludes.sql** - List avaliable sections for use with expdp/impdp.
+ * **dpmonit.sql** - Datapump monitor. Information on running Data Pump jobs.
+ * **excludes.sql** - Lists the available sections for use with expdp/impdp.
 ```
     @excludes <section> 
         section - The name (or part of it) of the section to be listed.
@@ -94,7 +100,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         c:\cria.tablespaces.<pattern>.sql
 ```
   
- * **getcursor[d].sql** - List, in descending order of Logical IO, of the cached cursors for a session. The script getcursord include even cursores with low number of reads.
+ * **getcursor[d].sql** - Lists, in descending order of Logical IO, the cached cursors for a session. The *getcursord* script includes even cursores with low number of reads.
 ```
     @getcursor <sid> <inst>
         sid - session identifier
@@ -127,24 +133,125 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
  * **getpfile.sql** - Produces a list of the non-default parameter set in the database. The output can be used to create a parameter file. Deprecated parameter are marked *(--)*.
  
- * **getsql.sql**
- * **getsqltxt.sql**
- * histconn.sql
- * indexes.sql
- * jobs[a].sql
- * limpaobjuser.sql
- * links.sql
- * lockmon.sql
- * login.sql
- * longall.sql
- * longops.sql
- * longs.sql
- * monitsegs[s].sql
- * nls.sql
- * obj.sql
- * parseas.sql
- * privobj.sql
- * privuser[d].sql
+ * **getsql.sql** - Reports source, execution statistics and the access plan of a statement
+```
+    @getsql <sql_id> 
+        sql_id - SQL identifier.
+    e.g.
+        @getsql 62jd0x1sdk42m
+```
+ * **getsqltxt.sql** - Searches in the SQL Area for statements containing the text. Can use wildcards.
+```
+    @getsqltxt <text> <username>
+        text - Text to be find in the statement
+        username - User parsing the statement
+    e.g.
+        @getsqltxt "select%cust_id%from%" usr_ecomm
+        @getsqltxt "delete%" %
+```
+ * **histconn.sql** - Returns returns two histograms with connection information for a given connected user. This is useful to examine the pool of connections of an application. The first histogram reports the sessions by creation time and indicates if session is active or no. The second one lists the session by inactivity time.<br>In a good pool of connections, you should find session existing for a long time and being used almost all the time, i.e, short periods of inactivity. 
+```
+    @histconn <m/s> <username>
+        m/s - Indicate the time interval of the buckets of the histogram: it can be in seconds or minutes. 
+        username - the name of the connected user.
+    e.g.
+        @histconn s user_ecomm
+        @histconn m user_ecomm
+``` 
+ * **indexes.sql** - Lists details of a table's indexes.
+***Note:** Must previously compile the GET_IND_EXPR function. Code included in the body of the script.*
+```
+    @indexes <table-owner> <table-name>
+        table-owner - The owner of the table
+        table-name - The name of the table
+    e.g.
+        @indexes usr_ecomm customers
+``` 
+ * **jobs[a].sql** - Reports information on old-fashioned jobs created by DBMS_JOB. Use jobsa to get information on running jobs.
+```
+    @jobs <job-owner> 
+        job-owner - The owner of the jobs
+    e.g.
+        @jobs %
+        @jobs usr_ecomm
+``` 
+ * **limpaobjuser.sql** - ***!!Be carefull!!*** - This script drops all objects in a given schema.
+  
+ * **links.sql** - Lists database links by schemas.
+```
+    @links <link-owner> <link-name>
+        link-owner - The owner the database link
+        link-name - The name of the database link
+    e.g.
+        @links usr_ecomm %
+        @links % db_remote.%
+``` 
+ * **lockmon.sql** - The lock monitor. Lists details about locks in the system. The list is driven by objects.
+```
+    @lockmon <obj-name>
+        obj-name - the name of the object to be listed.
+    e.g.
+        @lockmon %
+        @lockmon %cust%
+```  
+ * **long[s|ops|all].sql** - These scripts report information on long operations (v$session_longops). The *longs*
+ script filters by username. The *longops* and *longall*, in addition to the username, accept the session id (sid). The *longall* script reports even finished operations
+```
+    @longs <username>
+        username - the name of the user running long operations
+    @long[ops|all] <username> <sid>
+        username - the name of the user running long operations
+        sid - session identifier
+    e.g.
+        @longs usr_ecomm
+        @longops usr_ecomm 531
+        @longall usr_ecomm 531
+```  
+ * **monitsegs[d].sql** - Information on the size and wasted space of the objects. Also reports fragmentation info. The *monitsegsd* script details partitions.
+```
+    @monitsegs <tablespace> <username> <objectname>
+        tablespace - the name of tablespace where the objects were created
+        username - the name of the objects's owner
+        objectname - the name of the objects
+    e.g.
+        @monitsegs % usr_ecomm %
+        @monitsegsd % % customers
+        @monitsegs tbs_ecomm % %
+```  
+ * **nls.sql** - NLS info at different levels: session, instance, database and parameter file.
+ 
+ * **obj.sql** - This scripts reports details of an object (or a set of).
+```
+    @obj [<i|t|n|o|on|>=]<text>
+        i - filter by object id
+        t - filter by object type
+        n - filter by object name
+        o - filter by owner
+        on - filter by owner + "." + object_name
+        text - the text to search for
+    e.g.
+        @obj customers
+        @obj "t=DATABASE LINK"
+        @obj on=usr_ecomm.customer
+        @obj on=usr_ecomm.c%
+```  
+ * **parseas.sql** -  * **parseas.sql** - This is a editable script. It has no arguments, but you can use it as template for parsing (and executing) a statement in the behalf of other schema. This is a non-documented Oracle function.
+ * **privobj.sql** - Lists the privileged sources for a given object. Also lists the synonyms for the object. The script produces two files: the first one contains the DDL for grants and create synonyms; the last one contains the DDL for revoking permissions and to drop the synonyms. Useful to assign the same privileges in different databases. Can Use wildcards.
+```
+    @privobj <owner.object>
+        owner.object - the conjuction of owner + object_name.
+    e.g.
+        @privobj usr_ecomm.customers
+        @privobj %cust%
+   output file:
+        C:\Grant.Privs.SQL
+        C:\Revoke.Privs.SQL
+```  
+
+ * **privuser[d].sql** - This script generates the DDL to recreate a role/schema, including quotas and system  privileges (if applicable). The *privuserd* script also includes object privileges. In the case of a role, it lists privileged users and roles. ***Note:** Must previously compile the STRAGG package and its complements. See [stragg] script.*
+
+ * **profiles.sql**
+ * props.sql
  * recursos.sql
  * redosec.sql
  * resumable.sql

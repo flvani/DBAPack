@@ -2,7 +2,7 @@ set autotrace off timing off
 SET VERIFY OFF
 --DEFINE SIFUS=USR_SIAFI_OLD
 
-alter session set current_schema=usr_sipro;
+--alter session set current_schema=usr_sipro;
 
 /*
 ALTER SESSION SET NLS_SORT='BINARY'
@@ -24,35 +24,24 @@ ALTER SESSION SET NLS_COMP='ANSI'
 --ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='12.1.0.2';
 
 EXPLAIN PLAN SET STATEMENT_ID='&1.' INTO sys.plan_table$ FOR
-Select 
-P.anoProtocolo ,
- P.numProtocolo , 
- to_char(P.datCriacao,'dd/mm/yyyy hh24:mi') datCriacao ,
- vw.tx_lot , 
- NVL(E.texEspecie,'Espécie não especificada') , 
- NVL(F.texFuncao, 'Função não especificada') ,
- P.texComplementoTitulo , P.texAutorIniciativa , P.indTipoProtocolo ,
-NVL(C1.texDescricao,'Primeiro nível de classificação não definido') , 
-NVL(C2.texDescricao, 'Segundo nível de classificação não definido') ,
-NVL(C3.texDescricao,'Terceiro nível de classificação não definido') , 
-P.indStatus , P.indStatusComplementar , 
-P.anoDocumentoOriginador ,
-P.numDocumentoOriginador 
-, P."ROWID" , Pe."ROWID" , E."ROWID" , F."ROWID" , C1."ROWID" , C2."ROWID" , C3."ROWID"
--- ,vw."ROWID" 
-From Protocolo P , 
-Perfil Pe , 
-Especie E , 
-Funcao F , 
-Classificacao C1 , 
-Classificacao C2 , 
-Classificacao C3 ,
-usr_sipro.vwconsultaintranetlotacoes vw 
-Where P.idePerfilCriador = Pe.idePerfil and 
-Pe.ideUnidade = vw.ideUnidade and P.ideEspecie =
-E.ideEspecie(+) and P.ideFuncao = F.ideFuncao(+) and 
-P.ideClassificacao = C1.ideClassificacao(+) and 
-C1.ideClassificacaoSuperior =C2.ideClassificacao(+) 
-and C2.ideClassificacaoSuperior = C3.ideClassificacao(+) 
-and P.ideProtocolo = 1034694
+select count(*)
+FROM usr_folhacd.servidor s
+JOIN (
+SELECT uc.idecadastro
+from usr_folhacd.unidadecamara uc
+start with uc.idecadastro in (
+SELECT uc1.idecadastro
+FROM usr_folhacd.historicoservidorcargocom hscc
+JOIN usr_folhacd.servidoreventohistorico sehcc ON sehcc.ideobjeto = hscc.ideserveventohist
+JOIN usr_folhacd.servidor chefe ON chefe.ideobjeto = sehcc.ideservidor
+JOIN usr_folhacd.cargocomissionado cc ON hscc.idecargocomissionado = cc.ideobjeto
+JOIN usr_folhacd.unidadecamara uc1 ON uc1.idecargocomissionadotitular = cc.ideobjeto
+WHERE chefe.numponto = :1     -- Ponto do chefe
+AND sehcc.datcancelamento IS NULL
+AND sehcc.datiniciohistorico <= Trunc(SYSDATE)
+AND Nvl(sehcc.datfimhistorico, Trunc(SYSDATE)) >= Trunc(SYSDATE)
+)
+connect by prior idecadastro = ideUnidadeSuperior
+) lot ON s.ideunidadefolhaponto = lot.idecadastro
+WHERE s.numponto = :2   -- Ponto do subordinado
 /
