@@ -21,27 +21,49 @@ ALTER SESSION SET NLS_COMP='ANSI'
 --TABLESPACE TBSI_FOLHACD
 --/
 
---ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='12.1.0.2';
+ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='11.2.0.2';
+ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='11.2.0.2';
+alter session enable parallel dml;
 
 EXPLAIN PLAN SET STATEMENT_ID='&1.' INTO sys.plan_table$ FOR
-select count(*)
-FROM usr_folhacd.servidor s
-JOIN (
-SELECT uc.idecadastro
-from usr_folhacd.unidadecamara uc
-start with uc.idecadastro in (
-SELECT uc1.idecadastro
-FROM usr_folhacd.historicoservidorcargocom hscc
-JOIN usr_folhacd.servidoreventohistorico sehcc ON sehcc.ideobjeto = hscc.ideserveventohist
-JOIN usr_folhacd.servidor chefe ON chefe.ideobjeto = sehcc.ideservidor
-JOIN usr_folhacd.cargocomissionado cc ON hscc.idecargocomissionado = cc.ideobjeto
-JOIN usr_folhacd.unidadecamara uc1 ON uc1.idecargocomissionadotitular = cc.ideobjeto
-WHERE chefe.numponto = :1     -- Ponto do chefe
-AND sehcc.datcancelamento IS NULL
-AND sehcc.datiniciohistorico <= Trunc(SYSDATE)
-AND Nvl(sehcc.datfimhistorico, Trunc(SYSDATE)) >= Trunc(SYSDATE)
-)
-connect by prior idecadastro = ideUnidadeSuperior
-) lot ON s.ideunidadefolhaponto = lot.idecadastro
-WHERE s.numponto = :2   -- Ponto do subordinado
+INSERT /*+ PARALLEL */ INTO USR_DW_CONLE.STG_TRAMITE_SOLICITACAO 
+SELECT 
+   UPPER(T6.TXDESCRICAO) SITUACAO
+  ,T1.CODSOLICITACAO
+  ,T1.SEQ, T2.DTINICIO, T1.DTFIM, T1.DTFIM - T2.DTINICIO DURACAO
+  , T1.NOMATIVIDADE,T1.NUPONTORESPONSAVEL, UPPER(SUBSTR(T5.NMFUNCIONARIO, 1, 30)) 
+FROM 
+(
+  SELECT ALL ROWNUM SEQ, R2.*
+  FROM 
+  (
+    SELECT CODSOLICITACAO, NULL DTINICIO, DTFIMATIVIDADE DTFIM, NOMATIVIDADE,NUPONTORESPONSAVEL 
+    FROM USR_COLEG.DRESPONSAVELETAPA@LOC_DW_CONLE WHERE CODSOLICITACAO = :B1 ORDER BY DTFIMATIVIDADE
+  ) R2 ORDER BY DTFIM 
+) T1 
+INNER JOIN 
+(
+  SELECT /*+ PARALLEL */ ALL R1.* 
+  FROM 
+  (              
+     SELECT ALL 
+       1 SEQ, COSOLICITACAO CODSOLICITACAO,
+       DTENTRADA DTINICIO 
+       FROM USR_COLEG.DSOLICITACAO@LOC_DW_CONLE 
+       WHERE COSOLICITACAO = :B1 
+     UNION 
+     SELECT ALL ROWNUM + 1 SEQ,
+        CODSOLICITACAO, DTINICIO 
+     FROM 
+     (
+        SELECT ALL CODSOLICITACAO, DTFIMATIVIDADE DTINICIO 
+        FROM USR_COLEG.DRESPONSAVELETAPA@LOC_DW_CONLE 
+        WHERE CODSOLICITACAO = :B1 ORDER BY DTFIMATIVIDADE 
+     ) ORDER BY DTINICIO
+  ) R1 
+) T2 ON T1.CODSOLICITACAO = T2.CODSOLICITACAO AND T1.SEQ = T2.SEQ 
+INNER JOIN USR_COLEG.DFUNCIONARIO@LOC_DW_CONLE T5 ON T5.NUPONTO = T1.NUPONTORESPONSAVEL 
+INNER JOIN USR_COLEG.AESTADOSOLICITACAO@LOC_DW_CONLE T6 ON :B2 = T6.COESTADO 
+ORDER BY 2,3
 /
+

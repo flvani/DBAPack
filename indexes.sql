@@ -21,24 +21,24 @@ END;
 */
 
 
-set verify off long 200 feed off lines 200
+set verify off long 212 feed off lines 212 pages 10000
 col table_name format a30
-col index_name format a60
+col index_name format a50
 col column_name format a70 trunc
 col uniqueness format a9 heading 'UNICIDADE'
 col index_type format a22 heading 'TYPE' trunc
 col status format a8 heading 'STATE'
 col descend format a3 heading 'ORD' TRUNC
 
-break on index_name
+break on table_name  on index_name
 
 select DISTINCT ix.table_name
 from dba_indexes ix
 where ix.table_owner LIKE upper( '&1.' )
 and ix.table_name LIKE upper( '&2.' )
-/
+.
 
-select /*+RULE*/ ic.index_owner||'.'||ix.index_name index_name
+select /*+RULE*/ ix.table_name, ic.index_owner||'.'||ix.index_name index_name
       ,ic.column_position||'-'||
         case
           when ix.table_name <> ic.table_name then ic.table_name||'('||ic.column_name||')'
