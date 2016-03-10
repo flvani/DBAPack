@@ -159,7 +159,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @histconn m user_ecomm
 ``` 
  * **indexes.sql** - Lists details of a table's indexes.
-***Note:** Must previously compile the GET_IND_EXPR function. Code included in the body of the script.*
+***Note:*** *Must previously compile the GET_IND_EXPR function. Code included in the body of the script.*
 ```
     @indexes <table-owner> <table-name>
         table-owner - The owner of the table
@@ -248,22 +248,23 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         C:\Revoke.Privs.SQL
 ```  
 
- * **privuser[d].sql** - This script generates the DDL to recreate a role/schema, including quotas and system  privileges (if applicable). The *privuserd* script also includes object privileges. In the case of a role, it lists privileged users and roles. ***Note:** Must previously compile the STRAGG package and its complements. See [stragg] script.*
+ * **privuser[d].sql** - This script generates the DDL to recreate a role/schema, including quotas and system  privileges (if applicable). The *privuserd* script also includes object privileges. In the case of a role, it lists privileged users and roles. ***Note:*** *Must previously compile the STRAGG package and its complements. See [stragg] script.*
 
  * **profiles.sql**
- * props.sql
- * recursos.sql
- * redosec.sql
- * resumable.sql
- * sched.sql
- * sessionwaits.sql
- * sesstat.sql
- * showplan.sql
- * showsga[c].sql
- * sort.sql
- * stragg.sql
- * tops[a|ab|b|k].sql
- * triggers.sql
+ * **props.sql**
+ * **recursos.sql**
+ * **redosec.sql**
+ * **resumable.sql**
+ * **sched.sql**
+ * **sessionwaits.sql**
+ * **sesstat.sql**
+ * **showplan.sql**
+ * **showsga[c].sql**
+ * **sort.sql**
+ * **stragg.sql**
+ * **tops[a|ab|b|k].sql**
+ * **triggers.sql**
+ * **users.sql**
  
 ## Installation
 
