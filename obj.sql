@@ -27,7 +27,7 @@ SET VERIFY OFF TERMOUT ON LINES 300 DEFINE "&" FEEDBACK OFF
 REM prompt DEBUG &cls_where.
 
 COLUMN DETALHES format A120
-COL OBJECT_NAME FORMAT A30
+COL OBJECT_NAME FORMAT A35 trunc
 
 select 
    o.owner
@@ -61,6 +61,7 @@ select
           FROM      DBA_MVIEW_REFRESH_TIMES t 
           LEFT JOIN DBA_REFRESH_CHILDREN s on (t.owner=s.owner and t.name=s.name)
           WHERE (o.owner=t.owner and o.object_name=t.name)
+          order by t.last_refresh desc fetch first 1 rows only
        )
      ELSE 
        'CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy' )
