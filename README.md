@@ -175,7 +175,17 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @jobs %
         @jobs usr_ecomm
 ``` 
- * **limpaobjuser.sql** - ***!!Be carefull!!*** - This script drops all objects in a given schema.
+ * **limpaobjuser.sql** - ***!!Be careful!!*** - This script drops all objects in a given schema.  
+***Note:*** Type "s" to proceed or "N" [default] to abort.
+```
+    @limpaobjuser <instance-name> <schema-owner> 
+        instance-name - It should match the instance name of the DB you are connected to.
+        schema-owner - The name of owner of the objects to be dropped
+    e.g.
+        @limpaobjuser orcl hr
+        
+        Deseja remover os objetos de hr@orcl (s/N)? _
+``` 
   
  * **links.sql** - Lists database links by schemas.
 ```

@@ -4,7 +4,7 @@ COL comments FOR a110
 
 SELECT named, object_path, comments 
 FROM database_export_objects  
-WHERE upper(comments) like upper('&1')
+WHERE upper(comments) like upper('&1') OR upper(OBJECT_PATH) like upper('&1')
 /
 
 undefine 1

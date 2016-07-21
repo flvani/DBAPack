@@ -1,12 +1,15 @@
-SET VERIFY OFF LINES 270 FEED OFF
+SET VERIFY OFF LINES 400 FEED OFF
+
 COL HASH_VALUE FORMAT 999999999999
-COL EXECUTIONS FORMAT 99G999G999 HEAD 'Execucoes'
-COL CPU_TIME FORMAT 999G999 HEAD 'CPU Time|msecs'
-COL ELAPSED_TIME FORMAT 999G999G999 HEAD 'Elapsed Time|msecs'
-COL BUFFER_GETS FORMAT 9G999G999G999 HEAD 'Leituras Logicas'
-COL GETS_BY_EXEC FORMAT 999G999G999 HEAD 'Leit.Logicas|Por Execucao'
-COL LINHAS FORMAT 999G999G999G999 HEAD 'Linhas|Processadas'
-COL SQL_TEXT FORMAT A80 HEAD 'Inicio do Texto do SQL' TRUNC
+COL EXECUTIONS FORMAT A12 HEAD 'Execucoes' JUST R
+COL CPU_TIME FORMAT A12 HEAD 'CPU Time|msecs' JUST R
+COL CPU_TIME_BY_EXEC FORMAT 999G999G999 HEAD 'CPU Time|msecs/Exec' JUST R
+COL ELAPSED_TIME FORMAT A12 HEAD 'Elapsed Time|msecs' JUST R
+COL BUFFER_GETS FORMAT A12 HEAD 'Leituras|Logicas' JUST R
+COL GETS_BY_EXEC FORMAT A12 HEAD 'Leit.Logicas|Por Execucao' JUST R
+COL LINHAS FORMAT A12 HEAD 'Linhas|Processadas' JUST R
+COL USER_NAME FORMAT A20 TRUNC
+COL SQL_TEXT FORMAT A180 HEAD 'Inicio do Texto do SQL' TRUNC
 
 set head off
 COL HH FORMAT A50
@@ -34,13 +37,51 @@ SELECT /*+ ALL_ROWS NO_MERGE(V) */
   ,v.user_name
   ,S.ROWS_PROCESSED LINHAS, S.EXECUTIONS, S.BUFFER_GETS
   ,TRUNC(S.BUFFER_GETS/DECODE(S.EXECUTIONS,NULL,1,0,1,S.EXECUTIONS)) GETS_BY_EXEC
-  ,TRUNC(S.CPU_TIME/1000) CPU_TIME, TRUNC(S.ELAPSED_TIME/1000) ELAPSED_TIME
+  ,TRUNC(S.CPU_TIME/1000) CPU_TIME
+  ,TRUNC(S.CPU_TIME/1000/DECODE(S.EXECUTIONS,NULL,1,0,1,S.EXECUTIONS)) CPU_TIME_BY_EXEC
+  ,TRUNC(S.ELAPSED_TIME/1000) ELAPSED_TIME
   ,S.SQL_TEXT 
   --,S.SQL_FULLTEXT
 FROM V
 LEFT JOIN GV$SQLAREA S ON ( V.sql_id = s.sql_id AND V.inst_id = s.inst_id )
 )
-SELECT * FROM CURSORES C
+SELECT 
+   C.inst_id
+  ,C.SQL_ID
+  ,C.user_name
+  ,LPAD(
+   decode(sign(1e+12-C.LINHAS), -1, to_char(C.LINHAS/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.LINHAS), -1, to_char(C.LINHAS/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.LINHAS), -1, to_char(C.LINHAS/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.LINHAS, 'fm999g999g999' )  ) ) ), 12, ' ' ) LINHAS
+  ,LPAD(
+   decode(sign(1e+12-C.EXECUTIONS), -1, to_char(C.EXECUTIONS/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.EXECUTIONS), -1, to_char(C.EXECUTIONS/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.EXECUTIONS), -1, to_char(C.EXECUTIONS/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.EXECUTIONS, 'fm999g999g999' )  ) ) ), 12, ' ' ) EXECUTIONS
+  ,LPAD(
+   decode(sign(1e+12-C.BUFFER_GETS), -1, to_char(C.BUFFER_GETS/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.BUFFER_GETS), -1, to_char(C.BUFFER_GETS/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.BUFFER_GETS), -1, to_char(C.BUFFER_GETS/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.BUFFER_GETS, 'fm999g999g999' )  ) ) ), 12, ' ' ) BUFFER_GETS
+  ,LPAD(
+   decode(sign(1e+12-C.GETS_BY_EXEC), -1, to_char(C.GETS_BY_EXEC/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.GETS_BY_EXEC), -1, to_char(C.GETS_BY_EXEC/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.GETS_BY_EXEC), -1, to_char(C.GETS_BY_EXEC/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.GETS_BY_EXEC, 'fm999g999g999' )  ) ) ), 12, ' ' ) GETS_BY_EXEC
+  ,LPAD(
+   decode(sign(1e+12-C.CPU_TIME), -1, to_char(C.CPU_TIME/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.CPU_TIME), -1, to_char(C.CPU_TIME/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.CPU_TIME), -1, to_char(C.CPU_TIME/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.CPU_TIME, 'fm999g999g999' )  ) ) ), 12, ' ' ) CPU_TIME
+  ,C.CPU_TIME_BY_EXEC
+  ,LPAD(
+   decode(sign(1e+12-C.ELAPSED_TIME), -1, to_char(C.ELAPSED_TIME/1e+09, 'fm999g999g999' ) || 'G',
+   decode(sign(1e+09-C.ELAPSED_TIME), -1, to_char(C.ELAPSED_TIME/1e+06, 'fm999g999g999' ) || 'M',
+   decode(sign(1e+06-C.ELAPSED_TIME), -1, to_char(C.ELAPSED_TIME/1e+03, 'fm999g999g999' ) || 'K',
+   to_char(C.ELAPSED_TIME, 'fm999g999g999' )  ) ) ), 12, ' ' ) ELAPSED_TIME
+  ,C.SQL_TEXT 
+FROM CURSORES C
 WHERE ( C.BUFFER_GETS >= &L_BUF_GET. OR C.GETS_BY_EXEC >= &L_BUF_GET_BY_EXEC. )
 ORDER BY case when c.user_name = 'SYS' then 'x' else c.user_name end, C.BUFFER_GETS DESC
 /
@@ -65,4 +106,9 @@ COL LINHAS CLEAR
 COL SQL_TEXT CLEAR
 COL BUFFER_GETS CLEAR
 COL EXECUTIONS CLEAR
-SET VERIFY ON FEED 6
+COL CPU_TIME CLEAR
+COL CPU_TIME_BY_EXEC CLEAR
+COL ELAPSED_TIME CLEAR
+COL USER_NAME CLEAR
+
+SET VERIFY ON FEED 6 LINES 200
