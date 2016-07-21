@@ -205,7 +205,8 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @lockmon %cust%
 ```  
  * **long[s|ops|all].sql** - These scripts report information on long operations (v$session_longops). The *longs*
- script filters by username. The *longops* and *longall*, in addition to the username, accept the session id (sid). The *longall* script reports even finished operations
+ script filters by username. The *longops* and *longall*, in addition to the username, accept the session id (SID) list. The *longall* script reports even finished operations.  
+ ***Note:*** SID list can be comma-separated (no spaces allowed) or 0 (zero) for all SIDs.
 ```
     @longs <username>
         username - the name of the user running long operations
