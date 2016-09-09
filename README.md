@@ -215,8 +215,9 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         sid - session identifier
     e.g.
         @longs usr_ecomm
-        @longops usr_ecomm 531
+        @longops usr_ecomm 531,533
         @longall usr_ecomm 531
+        @longall usr_ecomm 0
 ```  
  * **monitsegs[d].sql** - Information on the size and wasted space of the objects. Also reports fragmentation info. The *monitsegsd* script details partitions.
 ```

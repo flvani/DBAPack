@@ -99,7 +99,7 @@ SELECT
    decode(sign(1e+09-t2.value), -1, to_char(t2.value/1e+06, 'fm999g999g999' ) || 'M',
    decode(sign(1e+06-t2.value), -1, to_char(t2.value/1e+03, 'fm999g999g999' ) || 'K',
    to_char(t2.value, 'fm999g999g999' )  ) ) ), 15, ' ' ) || ' of ' || initcap( t2.name ) name,
-   t2.classe
+   t2.classe, t2.statistic#
 FROM TMP_S2 T2
 JOIN TMP_S1 T1 ON (T1.STATISTIC# = T2.STATISTIC#)
 WHERE NVL(T1.VALUE, 0) <> NVL(T2.VALUE,0)

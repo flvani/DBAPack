@@ -18,9 +18,10 @@ COL CHAMADA      FORMAT            A11 HEAD "Chamada"
 COL LREADS       FORMAT 999G999G999G990 HEAD "Logical Reads"
 COL WAITS        FORMAT            A26 HEAD "Wait"
 COL SQL_ID       FORMAT            A13 HEAD "Sql ID"
-COL SQL_TEXT     FORMAT            A90 HEAD "Sql Statement" trunc
-COL MACHINE      FORMAT            A23 HEAD "Machine"     TRUNC
-COL PROGRAMA     FORMAT            A15 HEAD "Programa"    TRUNC
+COL SQL_TEXT     FORMAT            A90 HEAD "Sql Statement" TRUNC
+COL MACHINE      FORMAT            A23 HEAD "Machine"       TRUNC
+COL PROGRAMA     FORMAT            A15 HEAD "Programa"      TRUNC
+COL OSUSER       FORMAT            A20 HEAD "O.S. User"     TRUNC
 
 COLUMN cls_where new_value cls_where NOPRINT;
 COLUMN cls_no_background new_value cls_no_background NOPRINT;
@@ -40,7 +41,7 @@ COLUMN p_scope  new_value p_scope NOPRINT;
 --COL DREADS     FORMAT    999G999G990 HEAD "Disk Reads"
 --COL SERVER     FORMAT            A1  HEAD "M"
 
-SET VERIFY OFF TERMOUT OFF LINES 300 DEFINE ON FEEDBACK OFF
+SET VERIFY OFF TERMOUT OFF LINES 320 DEFINE ON FEEDBACK OFF
 
 SELECT
   decode( '&BKGRD.', 'YES', '', 'AND S.TYPE <> ''BACKGROUND'' ' ) cls_no_background
@@ -52,6 +53,7 @@ SELECT
  ,decode( '&ATIVOS.', 'YES', ' ativos)', ')' ) v_complemento
  ,&n_tops. + 8 v_pagesize
  ,case version 
+     when '12.1.0.2.0' then '14'    -- estatisticas listadas no 12.1.0.2
      when '11.2.0.2.0' then '66,70' -- estatisticas listadas no 11.2.0.2
      when '11.2.0.1.0' then '63,67' -- estatisticas listadas no 11.2.0.1
      else '9'                       -- estatisticas listadas no 10g e anteriores 
@@ -124,7 +126,7 @@ set head on
 WITH TOP_SESSIONS AS
 (
   SELECT 
-     &p_s_inst. INST, S.SID, S.SERIAL# SERIAL, S.STATUS, S.SERVER, P.SPID
+     &p_s_inst. INST, S.SID, S.SERIAL# SERIAL, S.STATUS, S.SERVER, P.SPID, S.OSUSER
     ,TO_CHAR( S.LOGON_TIME, 'DD/MM HH24:MI' ) LOGON_TIME
     ,LOWER(SUBSTR(S.MACHINE,1,23)) MACHINE, S.TYPE, SS.VALUE LREADS
     ,S.CLIENT_INFO, TO_CHAR( SYSDATE - (S.LAST_CALL_ET/86400), 'DD/MM HH24:MI' ) CHAMADA
@@ -154,6 +156,7 @@ SELECT
   ,LPAD( ''''||SE.SID||','||SE.SERIAL||',@'||SE.INST||'''',15,' ') || LPAD( TO_NUMBER(SE.SPID), 6, ' ' ) ||
    DECODE(SE.SERVER, 'DEDICATED', ' DED ', ' MTS ' ) || SE.USERNAME ||
    DECODE( SE.CLIENT_INFO, NULL, '', '' /* CHR(10) || LPAD( ' ', 12, ' ' ) || SE.CLIENT_INFO */ ) USERNAME
+  ,SE.OSUSER
   ,DECODE(SE.STATUS, 'INACTIVE', 'INACTV', SE.STATUS ) STATUS
   ,SE.LOGON_TIME
   ,SE.CHAMADA

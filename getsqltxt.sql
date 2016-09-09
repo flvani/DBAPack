@@ -11,8 +11,8 @@ col executions  format 99999999 head "Execuções"
 col times       format a16  head "CPU/Elapsed time|(msecs)"
 col parse_user    format a20
 
-define p_texto="&1."
-define p_user="&2."
+define p_user="&1."
+define p_texto="&2."
 
 REM PROMPT *&P_TEXTO.*
 
