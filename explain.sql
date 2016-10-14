@@ -25,6 +25,10 @@ ALTER SESSION SET NLS_COMP='ANSI'
 --ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='11.2.0.2';
 --alter session enable parallel dml;
 
+DEFINE P_HASH='0'
+DEFINE P_ADDR='0'
+DEFINE P_SQL_ID='n/a'
+
 EXPLAIN PLAN SET STATEMENT_ID='&1.' INTO sys.plan_table$ FOR
 SELECT   this_.ideauditoria AS ideaudit1_0_,
                  this_.texatividade AS texativi2_5_0_,

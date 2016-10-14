@@ -3,7 +3,7 @@ PROMPT ########################################################
 PROMPT
 PROMPT O plano para esta sentenca nao pode ser recuperado
 PROMPT &P_QTCOPIAS. copias na shared pool
-PROMPT Isto pode travar o banco.
+PROMPT Isto pode travar o banco. (mensagem lá do oracle 9i - será que é valida ainda?)
 PROMPT
 PROMPT ########################################################
 PROMPT
@@ -15,7 +15,9 @@ from v$sqlarea where version_count > 2
 group by hash_value, sql_text
 order by 2 desc
 
-SET HEAD OFF
+COL ISSUE FORMAT A30 
+COL VALOR FORMAT 9999999999
+SET HEAD OFF LINES 42 FEED OFF
 
 PROMPT MOTIVO                               VALOR
 PROMPT -------------------------------- ----------
@@ -77,6 +79,4 @@ FROM V$SQL_SHARED_CURSOR
 WHERE SQL_ID = '&p_sql_id.'
 GROUP BY SQL_ID
 /
-
-SET HEAD ON
-
+SET HEAD ON LINES 500

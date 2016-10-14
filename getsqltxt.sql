@@ -29,6 +29,8 @@ from gv$sqlarea
 where UPPER( sql_fulltext ) like UPPER('&p_texto.')
 and sql_text not like 'SELECT /* cGetSqlTxt */%'
 and UPPER( parsing_schema_name ) like UPPER('&p_user.')
+--and buffer_gets > 10000
+--and executions > 1000
 --order by case when executions > 1 then buffer_gets/executions else buffer_gets end desc
 order by buffer_gets desc
 /

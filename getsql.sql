@@ -8,10 +8,9 @@ DEFINE P1=&1.
 
 SET VERIFY OFF FEED OFF
 
---DEBUG: TO FORCE A SPECIFIC COPY
---DEFINE P_ADDR='00000001377C95E0'
+@fillplan&p_versao. &p_hash. &p_addr. &p_child_num.
 
-@getplan&p_versao. &p_hash. &p_addr.
+@do.expplan.sql &p_hash.
 
 ROLLBACK;
 
