@@ -11,13 +11,34 @@ COL LINHAS FORMAT A12 HEAD 'Linhas|Processadas' JUST R
 COL USER_NAME FORMAT A20 TRUNC
 COL SQL_TEXT FORMAT A180 HEAD 'Inicio do Texto do SQL' TRUNC
 
-set head off
-COL HH FORMAT A50
-SELECT 'Hora Atual: ' || TO_CHAR(SYSDATE, 'DD/MM/YYYY HH24:MI:SS' ) HH
-FROM DUAL
-/
-set head on
+DEFINE ARG='&1.'
 
+set termout off
+
+col p1 new_value p1
+col p2 new_value p2
+col p3 new_value p3
+col HH new_value HH
+
+select substr( '&ARG.,', 1, instr( '&ARG.,', ',' ) -1 ) p1 from dual;
+select substr( '&ARG.,', instr( '&ARG.,', ',' ) +1 ) p2 from dual;
+select substr( '&p2.', instr( '&p2.', ',' ) +1 ) p3 from dual;
+
+select
+  'Hora Atual: ' || TO_CHAR(SYSDATE, 'DD/MM/YYYY HH24:MI:SS' ) HH
+  ,case 
+     when trim(length( '&p3.' )) > 0 then replace(replace( '&p3.', '@', '' ), ',', '')
+     when length( '&p2.' ) > 0 then replace(replace( '&p2.', '@', '' ), ',', '')
+     else '1'
+   end p2
+from dual;
+
+set termout on
+
+PROMPT
+PROMPT Top Cursores Abertos para a Sessao: &p1.; Instancia: &p2.
+PROMPT &MSG.
+PROMPT &HH.
 
 WITH /* GetCursor */ V AS 
 (
@@ -28,7 +49,7 @@ WITH /* GetCursor */ V AS
     ,c.user_name
     ,c.address
   FROM GV$OPEN_CURSOR C
-  WHERE C.SID = &1. AND C.INST_ID = &2.
+  WHERE C.SID = &p1. AND C.INST_ID = &p2.
 ), CURSORES AS
 (
 SELECT /*+ ALL_ROWS NO_MERGE(V) */ 

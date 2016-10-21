@@ -56,10 +56,11 @@ The *login.sql* file is reponsible for several environment sets. You should edit
  
  * **detalhesql.sql** - Reports source and execution statistics of a statement.
 ```
-    @detalhesql <sql_id> 
-        sql_id - SQL identifier. See [tops.sql]
+    @detalhesql [{hash|addr|chld}=]<text> 
+        text - The text must be the SQL identifier (sql_id), the hash or the address of the statement or even the child_address.
     e.g.
-        @detalhesql 62jd0x1sdk42m
+        @detalhesql gfzzcku5525vf
+        @detalhesql chld=0000000157EA21C0
 ```
  * **dginst.sql** - Information on running instances and Data Guard status.
  * **dir.sql** - Directory information.
@@ -102,11 +103,15 @@ The *login.sql* file is reponsible for several environment sets. You should edit
   
  * **getcursor[d].sql** - Lists, in descending order of Logical IO, the cached cursors for a session. The *getcursord* script includes even cursores with low number of reads.
 ```
-    @getcursor <sid> <inst>
+    @getcursor <sid>[,serial#][,@inst_id]
         sid - session identifier
+        serial# - session serial number
         inst - instance identifier. For non-RAC systems it is always 1.
     e.g.
-        @getcursor 1127 1
+        @getcursor 1127,93450,@1
+        @getcursor 1127,@1
+        @getcursor 1127,1
+        @getcursor 1127
 ```
  * **getddl.sql** - Invokes dbms_metadata to extract the DDL for an object. For non-schema objects, such as, tablespaces, the last argument should be an asterisk (\*).
 ```
@@ -135,10 +140,11 @@ The *login.sql* file is reponsible for several environment sets. You should edit
  
  * **getsql.sql** - Reports source, execution statistics and the access plan of a statement
 ```
-    @getsql <sql_id> 
-        sql_id - SQL identifier.
+    @getsql [{hash|addr|chld}=]<text> 
+        text - The text must be the SQL identifier (sql_id), the hash or the address of the statement or even the child_address.
     e.g.
-        @getsql 62jd0x1sdk42m
+        @getsql gfzzcku5525vf
+        @getsql chld=0000000157EA21C0
 ```
  * **getsqltxt.sql** - Searches in the SQL Area for statements containing the text. Can use wildcards.
 ```
@@ -275,7 +281,9 @@ The *login.sql* file is reponsible for several environment sets. You should edit
  * **sort.sql**
  * **stragg.sql**
  * **tops[a|ab|b|k].sql**
+ * **transactions.sql**
  * **triggers.sql**
+ * **undo.sql**
  * **users.sql**
  
 ## Installation

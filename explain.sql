@@ -25,27 +25,21 @@ ALTER SESSION SET NLS_COMP='ANSI'
 --ALTER SESSION SET OPTIMIZER_FEATURES_ENABLE='11.2.0.2';
 --alter session enable parallel dml;
 
-DEFINE P_HASH='0'
-DEFINE P_ADDR='0'
-DEFINE P_SQL_ID='n/a'
-
 EXPLAIN PLAN SET STATEMENT_ID='&1.' INTO sys.plan_table$ FOR
-SELECT   this_.ideauditoria AS ideaudit1_0_,
-                 this_.texatividade AS texativi2_5_0_,
-                 this_.datoperacao AS datopera3_5_0_,
-                 this_.texdescricao AS texdescr4_5_0_,
-                 this_.idemestre AS idemestre5_0_,
-                 this_.ideobjeto AS ideobjeto5_0_,
-                 this_.texpontousuario AS texponto7_5_0_,
-                 this_.texregistro AS texregis8_5_0_,
-                 this_.textipomestre AS textipom9_5_0_,
-                 this_.textipoobjeto AS textipo10_5_0_,
-                 this_.codtipooperacao AS codtipo11_5_0_
-            FROM usr_sigas.auditoria this_
-           WHERE (   (this_.ideobjeto = 46432 AND this_.textipoobjeto ='br.gov.camara.procede.sigas.comum.model.Evento')
-                  OR (this_.ideobjeto = 42486 AND this_.textipoobjeto ='br.gov.camara.procede.sigas.comum.model.Demanda')
-                  OR (this_.idemestre = 46432 AND this_.textipomestre ='br.gov.camara.procede.sigas.comum.model.Evento' 
-                  AND this_.textipoobjeto IN('br.gov.camara.procede.sigas.comum.model.Anexo'))
-                 )
-        ORDER BY this_.datoperacao DESC
+update /*+ rule */ usr_dw_sisconle.ft_etapa_situacao_solicitacao 
+set ide_dim_ultima_situacao_mes = 800
+where (ide_dim_etapa_solicitacao_trab,ide_data_etapa) in 
+(select etapa_ante.ide_dim_etapa_solicitacao_trab, etapa_ante.ide_data_etapa --,etapa_ante.ide_dim_solicitacao_trabalho
+from usr_dw_sisconle.ft_etapa_situacao_solicitacao etapa_ante
+inner join usr_dw_corporativo.dimtempo dimtempo_ante
+        on dimtempo_ante.IDETEMPO = etapa_ante.ide_data_etapa
+inner join (select etapa_final.ide_dim_solicitacao_trabalho, etapa_final.ide_Dim_situacao_etapa, etapa_final.ide_data_etapa, dimtempo.CODANO, dimtempo.codmes  
+                from usr_dw_sisconle.ft_etapa_situacao_solicitacao etapa_final
+                  inner join usr_dw_corporativo.dimtempo dimtempo
+                          on dimtempo.IDETEMPO = etapa_final.ide_data_etapa
+                  where etapa_final.ide_Dim_situacao_etapa = 800) etapa_final -- Retorna todas etapas Canceladas
+      on etapa_final.ide_dim_solicitacao_trabalho = etapa_ante.IDE_DIM_SOLICITACAO_TRABALHO
+      and etapa_final.codano = dimtempo_ante.codano
+      and etapa_final.codmes = dimtempo_ante.codmes
+where etapa_ante.ide_dim_ultima_situacao_mes not in (800,9999)) -- altera etapas diferentes de Canceladas ou Ajustes no mesmo dia da etapa Cancelada
 /

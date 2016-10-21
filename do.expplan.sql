@@ -11,28 +11,23 @@ SELECT NAME, UPPER(VALUE) VALUE
 FROM V$PARAMETER
 WHERE NAME IN ( 'cursor_sharing', 'optimizer_mode', 'hash_join_enabled' )
 UNION ALL
-SELECT 'sql_id', '&P_SQL_ID.' FROM DUAL
+SELECT 'sql_id', '&P_SQL_ID.' FROM DUAL where '&P_SQL_ID.' <> 'n/a'
 UNION ALL
-SELECT 'address', case when '&P_SQL_ID.' = 'n/a' then 'n/a' else to_char('&p_addr.') end FROM DUAL
+SELECT 'child_address', case when '&P_SQL_ID.' = 'n/a' then 'n/a' else to_char('&p_child_addr.') end FROM DUAL where  '&P_SQL_ID.' <> 'n/a'
 UNION ALL
 SELECT DISTINCT 'plan_hash_value', case when '&P_SQL_ID.' = 'n/a' then 'n/a' else to_char(PLAN_ID) end
 FROM sys.PLAN_TABLE$
-WHERE STATEMENT_ID = '&1.'
+WHERE STATEMENT_ID = '&1.' and  '&P_SQL_ID.' <> 'n/a'
+UNION ALL
+SELECT 'sql_profile', '&p_sql_profile.' FROM DUAL where length('&p_sql_profile.') > 0
+UNION ALL
+SELECT 'sql_plan_baseline', '&p_sql_plan_baseline.' FROM DUAL where length('&p_sql_plan_baseline.') > 0
+UNION ALL
+SELECT 'sql_patch', '&p_sql_patch.' FROM DUAL where length('&p_sql_patch.') > 0
+UNION ALL
+SELECT 'outline_category', '&p_outline_category.' FROM DUAL where length('&p_outline_category.') > 0
 --UNION ALL
 --SELECT 'arquivo', upper('explain.&1..sql') FROM DUAL 
-/
-
-WITH PLANS AS
-(
-  SELECT /*+materialize*/ DISTINCT
-    P.SQL_ID, P.CHILD_NUMBER VERSION#, P.HASH_VALUE, P.ADDRESS, P.PLAN_HASH_VALUE, CHILD_ADDRESS
-  FROM GV$SQL_PLAN P
-  WHERE P.SQL_ID = '&P_SQL_ID.'
-) 
-SELECT S.INST_ID SID, P.VERSION#, P.ADDRESS, S.CHILD_ADDRESS, P.PLAN_HASH_VALUE, S.LOADED_VERSIONS, OPEN_VERSIONS
-FROM PLANS P
-JOIN GV$SQL S ON (S.CHILD_ADDRESS = P.CHILD_ADDRESS)
-ORDER BY  S.INST_ID, P.VERSION#
 /
 
 COL NAME   clear
