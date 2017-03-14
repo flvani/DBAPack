@@ -2,7 +2,7 @@ col qt_inst new_value qt_inst
 col vw new_value vw
 col exp new_value exp
 
-set termout off verify off pages 1000 feed 1000 lines 200
+set termout off verify off pages 1000 feed 1000 lines 250
 select 
    nvl(to_number(p.value), 1 ) qt_inst
   ,case when nvl(to_number(p.value), 1 ) > 1 then 'gv$parameter2 P' else 'v$parameter2 P' end vw
@@ -15,7 +15,7 @@ where p.name='cluster_database_instances'
 SET LONG 512
 COL "="  FORMAT A1
 COL NAME FORMAT A44
-COL VALUE FORMAT A110 WRAP
+COL VALUE FORMAT A150 WRAP
 
 set termout on verify off
 SELECT 
@@ -27,7 +27,8 @@ FROM
   -- global
   select isdeprecated, name, value, count(*)
   from &vw.
-  WHERE NVL( ISDEFAULT, 'X' ) = 'FALSE' AND name not like '#_#_%' ESCAPE '#'
+  WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
+  AND name not like '#_#_%' ESCAPE '#'
   group by isdeprecated, name, value
   having count(*) > 1 and count(*) >= &qt_inst.
 )
@@ -37,7 +38,7 @@ SELECT
  ,'=' "="
  ,NVL(p.value, ''''||p.value||'''' ) VALUE
 FROM &vw. 
-WHERE NVL( p.isdefault, 'X' ) = 'FALSE' 
+WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
 AND p.name not like '#_#_%' ESCAPE '#'
 AND NOT EXISTS 
 ( 
@@ -47,7 +48,8 @@ SELECT 1
     -- global 
     select isdeprecated, name, value, count(*)
     from &vw.
-    WHERE NVL( ISDEFAULT, 'X' ) = 'FALSE' AND name not like '#_#_%' ESCAPE '#'
+    WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
+    AND name not like '#_#_%' ESCAPE '#'
     group by isdeprecated, name, value
     having count(*) > 1 and count(*) >= &qt_inst.
   )g 

@@ -14,7 +14,7 @@ COL "TbsMaxSizeMb"      FORMAT A12
 COL "MaxUsedMb"         FORMAT A9
 COL "MaxSortMb"         FORMAT A9
 COL "Extent/Segment Management" FORMAT A30
-
+COL SID CLEAR
 SELECT 
    T.TABLESPACE_NAME "Tablespace"
   ,LPAD( TO_CHAR( F.BLOCKS * T.BLOCK_SIZE/1048576, 'fm999g999' ), 12, ' ' ) "TbsMaxSizeMb"

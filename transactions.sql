@@ -1,4 +1,4 @@
-SET FEED 10 LINES 150
+SET FEED 10 LINES 170
 
 col sid for 99999
 col username format a20
@@ -15,6 +15,7 @@ var total number;
 var esttime number;
 
 col status format a15
+col username format a30 heading "Username"
 col st1 format a14 heading "Startup Time"
 col st2 format a14 heading "System Date" noprint
 col st3 format a12 heading "Running Time"
@@ -72,7 +73,7 @@ CROSS JOIN PROP P
 PROMPT
 PROMPT ########## ATIVAS      ##########
 SELECT
- (SELECT SID FROM GV$SESSION S WHERE S.INST_ID = INST_ID AND S.SADDR = SES_ADDR) SID,
+ (SELECT max(SID) FROM GV$SESSION S WHERE S.INST_ID = INST_ID AND S.SADDR = SES_ADDR) SID,
  (SELECT USERNAME FROM V$SESSION WHERE SADDR = SES_ADDR) USERNAME,
  XIDUSN USN, XIDSLOT SLOT, XIDSQN SEQUENCE, STATUS, START_TIME, USED_UBLK, USED_UREC, LOG_IO, PHY_IO, TRUNC( USED_UBLK * 8 / 1024 ) UNDO_MB
 FROM GV$TRANSACTION

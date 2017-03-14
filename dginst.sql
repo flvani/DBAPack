@@ -1,4 +1,4 @@
-SET VERIFY OFF SERVEROUT ON FEEDBACK OFF UNDERLINE '~' LINES 185
+SET VERIFY OFF SERVEROUT ON FEEDBACK OFF UNDERLINE '~' LINES 200
 
 col db_name format a9
 col inst_name format a9
@@ -27,29 +27,37 @@ select
   ,to_char( (sysdate-i.startup_time)*24*60*60, '999g999g990' ) st4
   ,to_char(d.current_scn, '999g999g999g999g999') SCN
 from gv$instance i 
-cross join v$database d
-ORDER BY INST_ID        
+join gv$database d on (i.inst_id = d.inst_id)
+ORDER BY i.INST_ID        
 /
 
 select 
-   i.status || ' ' || d.open_mode status
+   i.inst_id
+  ,i.status || ' ' || d.open_mode status
   ,i.logins
   ,i.archiver
   ,d.database_role db_role
   ,d.protection_mode
   ,d.switchover_status 
 from gv$instance i 
-cross join v$database d
-ORDER BY INST_ID        
+join gv$database d on (i.inst_id = d.inst_id)
+ORDER BY i.INST_ID        
 /
 
 
-SELECT PROCESS, STATUS, THREAD#, SEQUENCE#
-FROM V$MANAGED_STANDBY;
+SELECT INST_ID, PROCESS, STATUS, THREAD#, SEQUENCE#
+FROM GV$MANAGED_STANDBY
+ORDER BY INST_ID;
 
-SELECT DEST_ID, STATUS, RECOVERY_MODE, ARCHIVED_THREAD#, ARCHIVED_SEQ#, APPLIED_THREAD#, APPLIED_SEQ#, ERROR
-FROM V$ARCHIVE_DEST_STATUS 
+SELECT inst_id, DEST_ID, STATUS, RECOVERY_MODE, ARCHIVED_THREAD#, ARCHIVED_SEQ#, APPLIED_THREAD#, APPLIED_SEQ#, ERROR
+FROM GV$ARCHIVE_DEST_STATUS 
 WHERE STATUS <> 'INACTIVE';
+
+
+col value format a15
+col name format a30
+
+select * from v$dataguard_stats;
 
 PROMPT
 SET FEEDBACK 6 UNDERLINE '-'

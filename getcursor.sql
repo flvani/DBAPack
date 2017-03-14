@@ -5,6 +5,6 @@ DEFINE MSG='Listando cursores com BUFFER_GETS > &L_BUF_GET. OR BUFFER_GETS/EXECU
 
 @do.getcursor.s@ql &arg.
 
-PROMPT Para obter a listagem completa de cursores use @GetCursorD &arg.
+PROMPT Para obter a listagem completa de cursores use @GetCursorD &P1. &P2.
 PROMPT
-UNDEFINE L_BUF_GET L_BUF_GET_BY_EXEC V_SID V_INST
+UNDEFINE L_BUF_GET L_BUF_GET_BY_EXEC MSG ARG P1 P2 P3 HH 

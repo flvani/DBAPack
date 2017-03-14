@@ -5,6 +5,6 @@ DEFINE MSG=''
 
 @do.getcursor.sql &arg.
 
-PROMPT Para obter o resumo dos Top Cursores use @GetCursor &arg.
+PROMPT Para obter o resumo dos Top Cursores use @GetCursor &P1. &P2.
 PROMPT
-UNDEFINE L_BUF_GET L_BUF_GET_BY_EXEC ARG
+UNDEFINE L_BUF_GET L_BUF_GET_BY_EXEC MSG ARG P1 P2 P3 HH 

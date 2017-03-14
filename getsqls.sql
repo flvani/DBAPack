@@ -13,12 +13,12 @@ DEFINE P_SQL_PROFILE=''
 DEFINE P_SQL_PLAN_BASELINE=''
 DEFINE P_OUTLINE_CATEGORY=''
 
-@detalhesql &P1 false
+@detalhesql &P1 true
 
 SET VERIFY OFF FEED OFF
 
-@fillplan&p_versao. &p_hash. &p_addr. &p_child_num.
-@do.expplan.sql &p_hash.
+REM @fillplan&p_versao. &p_hash. &p_addr. &p_child_num.
+REM @do.expplan.sql &p_hash.
 
 ROLLBACK;
 
