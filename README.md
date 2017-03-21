@@ -20,10 +20,11 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
 #### Sql files:
 
- * **asm[op].sql** - ASM info. The *asmop* scripts reports only ASM operations.
+ * **asm[d|op].sql** - ASM info. The *asmop* scripts reports only ASM operations.
 ```
     e.g.
         @asm
+        @asmd 
         @asmop
 ```
  * **awrsql.sql** - Historical information about execution plan for a single SQL, gathered from AWR repo.
@@ -53,15 +54,7 @@ The *login.sql* file is reponsible for several environment sets. You should edit
         @dbafreespace %
         @dbafreespaced SYSTEM
 ```
- 
- * **detalhesql.sql** - Reports source and execution statistics of a statement.
-```
-    @detalhesql [{hash|addr|chld}=]<text> 
-        text - The text must be the SQL identifier (sql_id), the hash or the address of the statement or even the child_address.
-    e.g.
-        @detalhesql gfzzcku5525vf
-        @detalhesql chld=0000000157EA21C0
-```
+  
  * **dginst.sql** - Information on running instances and Data Guard status.
  * **dir.sql** - Directory information.
  * **dpmonit.sql** - Datapump monitor. Information on running Data Pump jobs.
@@ -138,13 +131,14 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
  * **getpfile.sql** - Produces a list of the non-default parameter set in the database. The output can be used to create a parameter file. Deprecated parameter are marked *(--)*.
  
- * **getsql.sql** - Reports source, execution statistics and the access plan of a statement
+ * **getsql[s].sql** - Reports source, execution statistics and the access plan of a statement. The file getsqls presents only a summary version of the statment
 ```
     @getsql [{hash|addr|chld}=]<text> 
         text - The text must be the SQL identifier (sql_id), the hash or the address of the statement or even the child_address.
     e.g.
         @getsql gfzzcku5525vf
         @getsql chld=0000000157EA21C0
+        @getsqls gfzzcku5525vf
 ```
  * **getsqltxt.sql** - Searches in the SQL Area for statements containing the text. Can use wildcards.
 ```
@@ -281,6 +275,12 @@ The *login.sql* file is reponsible for several environment sets. You should edit
  * **sort.sql**
  * **stragg.sql**
  * **tops[a|ab|b|k].sql**
+ * **topstmt.sql ** - Reports the top N queries with the highest level of logical reads by execution. This script also considers a minimum number of executions of each statement as well a minimum executation rate over the time since when the query was first loaded in the shared pool. Those limits are hardcoded and initially adjusted to 10 and 0,1 (one execution every ten seconds)
+ ```
+    e.g.
+        @topstmt
+```  
+
  * **transactions.sql**
  * **triggers.sql**
  * **undo.sql**
