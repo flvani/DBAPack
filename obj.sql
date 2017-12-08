@@ -12,7 +12,7 @@ select lower(substr( '&1.' , 1, &lmt. )) sel,  upper(substr( '&1.', &lmt.+1, 100
 select
  case '&sel.'
      when 'o='  then 'where o.owner like ''&val.''' 
-     when 'on=' then 'where o.owner||''.''||UPPER(o.object_name) like ''&val.''' 
+     when 'on=' then 'where UPPER(o.owner||''.''||o.object_name) like ''&val.''' 
      when 't='  then 'where object_type like ''&val.''' 
      when 'n='  then 'where UPPER(object_name) like ''&val.''' 
      when 'i='  then 'where object_id like ''&val.''' 
@@ -51,7 +51,7 @@ select
        ( 
         SELECT 
           CASE WHEN IOT_TYPE IS NULL THEN 'HEAP' ELSE 'IOT: ' || IOT_TYPE || ' (name:' || IOT_NAME || ')' END || ', TEMPORARY: ' || TEMPORARY || 
-          ', CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy' )
+          ', CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi' )
         FROM dba_tables s 
         WHERE (o.owner=s.owner and o.object_name=s.table_name)
        )

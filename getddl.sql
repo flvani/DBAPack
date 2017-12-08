@@ -1,3 +1,6 @@
+-- 1- tipo (table, index...)
+-- 2 - schema
+-- 3 - nome do objeto
 COL DDL FORMAT A500 
 SET LONG 32000 VERIFY OFF pages 1000 LINES 500
 SELECT 

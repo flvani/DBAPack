@@ -7,6 +7,8 @@ COL OBJETO      FORMAT A145
 COL DDL         FORMAT A145
 COL TIPO        NEW_VALUE TIPO NOPRINT
 
+DEFINE P1=UPPER('&1.')
+
 PROMPT
 PROMPT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PROMPT PRIVILÉGIOS DE SISTEMA=SIM
@@ -42,7 +44,7 @@ FROM
 WHERE OBJETO IS NOT NULL
 /
 
-SPOOL C:\privuser.out APPEND
+SPOOL &p_temp_path.privuser.&1..txt APPEND
 -- OBTEM O DDL DO USUARIO/ROLE
 WITH OBJ AS
 (
@@ -110,6 +112,9 @@ SPOOL OFF
 
 PROMPT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PROMPT
+PROMPT RELACAO DOS PRIVILEGIOS GERADA EM: &p_temp_path.privuser.&1..txt
+PROMPT
+
 SET FEED 6 PAGES 66 UNDERLINE '-'
 
 COL PRIVILEGIOS CLEAR
@@ -117,4 +122,6 @@ COL DDL         CLEAR
 COL DETALHES    CLEAR
 COL OBJETO      CLEAR
 COL SINONIMO    CLEAR
-COL TIPO CLEAR
+COL TIPO 		CLEAR
+
+UNDEFINE P1

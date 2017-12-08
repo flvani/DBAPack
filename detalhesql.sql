@@ -19,7 +19,8 @@ COL SORTS            FORMAT 999G999        HEAD "Sorts" NOPRINT
 COL VERSIONS         FORMAT A9             HEAD "Versions|Tot/Open"  JUST R
 COL CPU_TIME         FORMAT A9             HEAD 'CPU Time|msecs' JUST R
 COL CPU_TIME_BY_EXEC FORMAT A10            HEAD 'CPU Time|msecs/Exec' JUST R
-COL ELAPSED_TIME     FORMAT A9             HEAD 'Elapsed Time|msecs' JUST R
+COL ELA_TIME_BY_EXEC FORMAT A12            HEAD 'Elapsed Time|msecs/Exec' JUST R
+COL ELAPSED_TIME     FORMAT A12            HEAD 'Elapsed Time|msecs' JUST R
 COL BIND_POS         FORMAT 999            HEAD 'Pos'
 COL BIND_VAR         FORMAT A20            HEAD 'Bind name' TRUNC
 COL BIND_VALUE       FORMAT A100           HEAD 'Bind value' TRUNC
@@ -127,7 +128,7 @@ WITH GVS AS
     ,S.CHILD_ADDRESS
     ,S.PLAN_HASH_VALUE
     ,S.PARSING_SCHEMA_NAME
-   HAVING SUM(S.USERS_OPENING) > 0
+   --HAVING SUM(S.USERS_OPENING) > 0
 ), GVSA AS (
   SELECT
      INST_ID
@@ -150,6 +151,7 @@ WITH GVS AS
     ,ROUND(DISK_READS/DECODE(EXECUTIONS,0,1,EXECUTIONS),2) DR_EXEC
     ,ROUND(BUFFER_GETS/DECODE(EXECUTIONS,0,1,EXECUTIONS),2) BG_EXEC
     ,ROUND(CPU_TIME/DECODE(EXECUTIONS,0,1,EXECUTIONS),2) CPU_TIME_BY_EXEC
+    ,ROUND(ELAPSED_TIME/DECODE(EXECUTIONS,0,1,EXECUTIONS),2) ELA_TIME_BY_EXEC
   FROM GVS
 )
 SELECT DISTINCT
@@ -158,43 +160,48 @@ SELECT DISTINCT
   ,DECODE( S.CHILD_ADDRESS, '&P_CHILD_ADDR', '* ', '  ' ) || S.CHILD_ADDRESS CHILD_ADDRESS 
   ,S.PLAN_HASH_VALUE PLAN_HASH_VALUE
   ,S.EXECUTIONS
-  ,S.SORTS
-  ,S.ROWS_PROCESSED
-  ,LPAD(
-     decode(sign(1e+12-S.DISK_READS), -1, to_char(S.DISK_READS/1e+09, 'fm999g999g999' ) || 'G',
-     decode(sign(1e+09-S.DISK_READS), -1, to_char(S.DISK_READS/1e+06, 'fm999g999g999' ) || 'M',
-     decode(sign(1e+06-S.DISK_READS), -1, to_char(S.DISK_READS/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.DISK_READS, 'fm999g999g999' )  ) ) ), 9, ' ' ) DISK_READS
-  ,LPAD(
-     decode(sign(1e+12-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+09, 'fm999g999g999' ) || 'G',
-     decode(sign(1e+09-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+06, 'fm999g999g999' ) || 'M',
-     decode(sign(1e+06-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.DR_EXEC, 'fm999g999g999' )  ) ) ), 9, ' ' ) DR_EXEC
-  ,LPAD(
-     decode(sign(1e+12-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+09, 'fm999g999g999' ) || 'G',
-     decode(sign(1e+09-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+06, 'fm999g999g999' ) || 'M',
-     decode(sign(1e+06-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.BUFFER_GETS, 'fm999g999g999' )  ) ) ), 9, ' ' ) BUFFER_GETS
-  ,LPAD(
-     decode(sign(1e+12-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+09, 'fm999g999g999' ) || 'G',
-     decode(sign(1e+09-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+06, 'fm999g999g999' ) || 'M',
-     decode(sign(1e+06-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.BG_EXEC, 'fm999g999g999' )  ) ) ), 9, ' ' ) BG_EXEC
-  ,LPAD(
-     decode(sign(1e+12-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+09, 'fm999g999g999' ) || 'G',
-     decode(sign(1e+09-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+06, 'fm999g999g999' ) || 'M',
-     decode(sign(1e+06-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.CPU_TIME, 'fm999g999g999' )  ) ) ), 9, ' ' ) CPU_TIME
   ,LPAD(
      decode(sign(1e+12-S.CPU_TIME_BY_EXEC), -1, to_char(S.CPU_TIME_BY_EXEC/1e+09, 'fm999g999g999' ) || 'G',
      decode(sign(1e+09-S.CPU_TIME_BY_EXEC), -1, to_char(S.CPU_TIME_BY_EXEC/1e+06, 'fm999g999g999' ) || 'M',
      decode(sign(1e+06-S.CPU_TIME_BY_EXEC), -1, to_char(S.CPU_TIME_BY_EXEC/1e+03, 'fm999g999g999' ) || 'K',
      to_char(S.CPU_TIME_BY_EXEC, 'fm999g999g999' )  ) ) ), 10, ' ' ) CPU_TIME_BY_EXEC
   ,LPAD(
+     decode(sign(1e+12-S.ELA_TIME_BY_EXEC), -1, to_char(S.ELA_TIME_BY_EXEC/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.ELA_TIME_BY_EXEC), -1, to_char(S.ELA_TIME_BY_EXEC/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.ELA_TIME_BY_EXEC), -1, to_char(S.ELA_TIME_BY_EXEC/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.ELA_TIME_BY_EXEC, 'fm999g999g999' )  ) ) ), 12, ' ' ) ELA_TIME_BY_EXEC
+  ,LPAD(
+     decode(sign(1e+12-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.BG_EXEC), -1, to_char(S.BG_EXEC/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.BG_EXEC, 'fm999g999g999' )  ) ) ), 9, ' ' ) BG_EXEC
+  ,LPAD(
+     decode(sign(1e+12-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.DR_EXEC), -1, to_char(S.DR_EXEC/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.DR_EXEC, 'fm999g999g999' )  ) ) ), 9, ' ' ) DR_EXEC
+  ,S.SORTS
+  ,S.ROWS_PROCESSED
+  ,LPAD(
+     decode(sign(1e+12-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.BUFFER_GETS), -1, to_char(S.BUFFER_GETS/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.BUFFER_GETS, 'fm999g999g999' )  ) ) ), 9, ' ' ) BUFFER_GETS
+  ,LPAD(
+     decode(sign(1e+12-S.DISK_READS), -1, to_char(S.DISK_READS/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.DISK_READS), -1, to_char(S.DISK_READS/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.DISK_READS), -1, to_char(S.DISK_READS/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.DISK_READS, 'fm999g999g999' )  ) ) ), 9, ' ' ) DISK_READS
+  ,LPAD(
+     decode(sign(1e+12-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+09, 'fm999g999g999' ) || 'G',
+     decode(sign(1e+09-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+06, 'fm999g999g999' ) || 'M',
+     decode(sign(1e+06-S.CPU_TIME), -1, to_char(S.CPU_TIME/1e+03, 'fm999g999g999' ) || 'K',
+     to_char(S.CPU_TIME, 'fm999g999g999' )  ) ) ), 9, ' ' ) CPU_TIME
+  ,LPAD(
      decode(sign(1e+12-S.ELAPSED_TIME), -1, to_char(S.ELAPSED_TIME/1e+09, 'fm999g999g999' ) || 'G',
      decode(sign(1e+09-S.ELAPSED_TIME), -1, to_char(S.ELAPSED_TIME/1e+06, 'fm999g999g999' ) || 'M',
      decode(sign(1e+06-S.ELAPSED_TIME), -1, to_char(S.ELAPSED_TIME/1e+03, 'fm999g999g999' ) || 'K',
-     to_char(S.ELAPSED_TIME, 'fm999g999g999' )  ) ) ), 9, ' ' ) ELAPSED_TIME
+     to_char(S.ELAPSED_TIME, 'fm999g999g999' )  ) ) ), 12, ' ' ) ELAPSED_TIME
   ,S.VERSIONS 
   ,S.USERS_OPENING
 FROM GVSA S
@@ -210,7 +217,7 @@ DECLARE
   IDX     PLS_INTEGER := 0;
   NPOS    PLS_INTEGER := 0;
   V_TXT   VARCHAR2(32000) := '';
-  V_LINHA VARCHAR2(169) := '';
+  V_LINHA VARCHAR2(300) := '';
 
   FUNCTION RESERVADA( L VARCHAR2 ) RETURN NUMBER
   IS
@@ -280,7 +287,7 @@ BEGIN
       NPOS := WORDBREAK( V_LINHA );
     END IF;
 
-    DBMS_OUTPUT.PUT_LINE( REPLACE(SUBSTR( V_TXT, IDX+1, NPOS ), CHR(10), '' ) );
+    DBMS_OUTPUT.PUT_LINE( REPLACE(REPLACE(SUBSTR( V_TXT, IDX+1, NPOS ), CHR(10), '' ), CHR(13), '' ) );
     IDX := IDX + NPOS;
 
   END LOOP;
@@ -301,7 +308,8 @@ PROMPT --- Bind Info
 SELECT CHILD_ADDRESS, POSITION BIND_POS, NAME BIND_VAR, VALUE_STRING BIND_VALUE
 FROM V$SQL_BIND_CAPTURE S
 WHERE SQL_ID = '&P_SQL_ID.'
-ORDER BY ADDRESS, CHILD_ADDRESS, POSITION
+ORDER BY ADDRESS, CHILD_ADDRESS, POSITION FETCH FIRST 300 ROWS ONLY
+
 /
 PROMPT
 PROMPT --- <End> Bind Info

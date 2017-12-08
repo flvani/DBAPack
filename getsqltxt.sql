@@ -8,7 +8,8 @@ col buffer_gets format 999g999g999g990 head "Leituras|Lógicas"
 col "PorExec"   format 999g999g990 head "/Execução"
 col "Linhas"    format 999g999g990 head "Linhas|Processadas"
 col executions  format 99999999 head "Execuções"
-col times       format a16  head "CPU/Elapsed time|(msecs)"
+col times       format a16  just r head "CPU/Elapsed|(msecs)"
+col times_byexec  format a12  just r head "/Execução"
 col parse_user    format a20
 
 define p_user="&1."
@@ -24,6 +25,7 @@ SELECT /* cGetSqlTxt */
  ,disk_reads, disk_reads/decode(executions,0, 1,executions) "PorExec"
  ,buffer_gets, buffer_gets/decode(executions,0, 1,executions) "PorExec"
  ,lpad( trim(trunc(cpu_time/1000))||'/'||trim(trunc(elapsed_time/1000)), 16, ' ' ) times 
+ ,lpad( trim(trunc(cpu_time/decode(executions,0, 1,executions)/1000))||'/'||trim(trunc(elapsed_time/decode(executions,0, 1,executions)/1000)), 12, ' ' ) times_byexec 
  ,substr( sql_text, 1, 120 ) sql_text
 from gv$sqlarea
 where UPPER( sql_fulltext ) like UPPER('&p_texto.')

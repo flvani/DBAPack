@@ -48,11 +48,12 @@ PROMPT HISTOGRAMA DE CONEXÕES (filtrando usuário &p_user.)
 select to_char(sysdate, 'dd/mm/yy hh24:mi' ) "Hora Atual"
 from dual
 /
+
 PROMPT
 PROMPT HISTOGRAMA POR HORARIO DE CRIACAO (tempo em &extenso.)
 select
-   lower(username) ||'.'||
-   lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1))) username
+   trim(lower(username) ||'.'||
+   lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1))) ) username
  , sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 0, decode( status, 'ACTIVE', 1, 0), 0 ) ) || '/' ||
    sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 0, 1, 0 ) ) "00-05"
  , sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 1, decode( status, 'ACTIVE', 1, 0), 0 ) ) || '/' ||
@@ -73,8 +74,8 @@ select
 from gv$session
 WHERE USERNAME like upper('&p_user.') AND STATUS <> 'KILLED'
 group by
-  lower(username) ||'.'||
-  lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1)))
+   trim(lower(username) ||'.'||
+   lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1))) )
 order by 1
 /
 col sessoes format 999999 head "Total|Sessões"

@@ -9,9 +9,9 @@ BREAK ON OWNER SKIP 1
 COL OWNER NOPRINT
 
 PROMPT
-PROMPT Gerando Scripts de Grants (C:\Grant.Privs.SQL)
+PROMPT Gerando Scripts de Grants (&p_temp_path.Grant.Privs.SQL)
 
-SPOOL C:\Grant.Privs.SQL
+SPOOL &p_temp_path.Grant.Privs.SQL
 
 SELECT 
   'GRANT ' || STRAGG(PRIVILEGE)    || 
@@ -34,9 +34,9 @@ FROM DBA_SYNONYMS WHERE TABLE_OWNER||'.'||TABLE_NAME LIKE &P1.
 SPOOL OFF
 
 PROMPT
-PROMPT Gerando Scripts de Revogação (C:\Revoke.Privs.SQL)
+PROMPT Gerando Scripts de Revogação (&p_temp_path.Revoke.Privs.SQL)
 
-SPOOL C:\Revoke.Privs.SQL
+SPOOL &p_temp_path.Revoke.Privs.SQL
 
 SELECT 
   '--REVOKE ' || STRAGG(PRIVILEGE)    || 
