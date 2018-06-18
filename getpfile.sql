@@ -1,7 +1,7 @@
 col qt_inst new_value qt_inst
 col vw new_value vw
 col exp new_value exp
-
+define hidden=0
 set termout off verify off pages 1000 feed 1000 lines 250
 select 
    nvl(to_number(p.value), 1 ) qt_inst
@@ -29,6 +29,7 @@ FROM
   from &vw.
   WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
   AND name not like '#_#_%' ESCAPE '#'
+  and ( &hidden. = 1 OR ( &hidden. = 0 AND name not like '#_%' ESCAPE '#' ))
   group by isdeprecated, name, value
   having count(*) > 1 and count(*) >= &qt_inst.
 )
@@ -40,6 +41,7 @@ SELECT
 FROM &vw. 
 WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
 AND p.name not like '#_#_%' ESCAPE '#'
+and ( &hidden. = 1 OR ( &hidden. = 0 AND name not like '#_%' ESCAPE '#' ))
 AND NOT EXISTS 
 ( 
 SELECT 1 
@@ -50,6 +52,7 @@ SELECT 1
     from &vw.
     WHERE (NVL( ISDEFAULT, 'X' ) = 'FALSE' or (name like 'log_archive_dest__' and length(value)>0)) 
     AND name not like '#_#_%' ESCAPE '#'
+    and ( &hidden. = 1 OR ( &hidden. = 0 AND name not like '#_%' ESCAPE '#' ))
     group by isdeprecated, name, value
     having count(*) > 1 and count(*) >= &qt_inst.
   )g 

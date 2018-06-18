@@ -55,6 +55,7 @@ COLUMN parent_id_plus_exp ON   FORMAT   990 HEADING  'p'
 COLUMN id_plus_exp ON          FORMAT   990 HEADING  'i'
 
 COLUMN name                format a50
+COLUMN member              format a100
 COLUMN filename            format a50
 COLUMN file_name           format a50
 COLUMN object_name         format a30
