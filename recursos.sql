@@ -1,10 +1,11 @@
 SET LINES 200
-COL RESOURCE_NAME         HEADING "Recurso"
+COL RESOURCE_NAME         HEADING "Recurso" FORMAT A30
 COL CURRENT_UTILIZATION   HEADING "Valor|Corrente"
 COL MAX_UTILIZATION       HEADING "Valor|Máximo"
-COL INITIAL_ALLOCATION    HEADING "Valor|Inicial"   JUSTIFY R
-COL LIMIT_VALUE           HEADING "Valor|Limite"    JUSTIFY R
+COL INITIAL_ALLOCATION    HEADING "Valor|Inicial"  JUSTIFY R FORMAT A10
+COL LIMIT_VALUE           HEADING "Valor|Limite"   JUSTIFY R FORMAT A10
 COL "%Curr"               FORMAT  A7 JUSTIFY R
+
 SELECT V.*
 FROM
 (
@@ -17,5 +18,8 @@ FROM
 ) V
 WHERE V."%Curr" > 0
 ORDER BY RESOURCE_NAME, INST_ID
+/
+
+select count(*) procs, count(background) bkg, count(*) - COUNT(BACKGROUND) usr from v$process
 /
 

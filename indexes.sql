@@ -23,7 +23,7 @@ END;
 
 set verify off long 212 feed off lines 212 pages 10000
 col table_name format a30
-col index_name format a50
+col index_name format a60
 col column_name format a70 trunc
 col uniqueness format a9 heading 'UNICIDADE'
 col index_type format a22 heading 'TYPE' trunc

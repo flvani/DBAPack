@@ -55,13 +55,14 @@ DECLARE
   CURSOR C1 IS
     WITH SEGS AS (
     SELECT /*+materialize*/
-      T.NAME TABLESPACE_NAME, S.SEGMENT_TYPE,
-      DECODE( S.SEGMENT_TYPE,
+      T.NAME TABLESPACE_NAME
+     ,S.SEGMENT_TYPE
+     ,DECODE( S.SEGMENT_TYPE,
          'INDEX', 'INDICE', 'TABLE', 'TABELA', 'INDEX PARTITION', 'INDICE', 'TABLE PARTITION', 'TABELA',
-         'LOBINDEX', 'LOBIDX', 'LOGSEGMENT', 'LOBSEG', SUBSTR( TRIM(S.SEGMENT_TYPE), 1, 6 ) ) TIPO,
-      S.OWNER, S.SEGMENT_NAME, S.PARTITION_NAME, S.NEXT_EXTENT/1048576 NEXT,
-      S.MAX_EXTENTS, T.DFLMINLEN EXTLEN, S.EXTENTS NFRAGS,
-      S.HEADER_FILE, S.HEADER_BLOCK, DECODE(NVL(S.PCT_INCREASE,0), 0, '', '*' ) VAR_NEXT
+         'LOBINDEX', 'LOBIDX', 'LOGSEGMENT', 'LOBSEG', SUBSTR( TRIM(S.SEGMENT_TYPE), 1, 6 ) ) TIPO
+     ,S.OWNER, S.SEGMENT_NAME, S.PARTITION_NAME, S.NEXT_EXTENT/1048576 NEXT
+     ,S.MAX_EXTENTS, T.DFLMINLEN EXTLEN, S.EXTENTS NFRAGS
+     ,S.HEADER_FILE, S.HEADER_BLOCK, DECODE(NVL(S.PCT_INCREASE,0), 0, '', '*' ) VAR_NEXT
     FROM DBA_SEGMENTS S, SYS.TS$ T
     WHERE S.OWNER LIKE UPPER('&P_OWNER.')
     AND T.NAME LIKE UPPER('&P_TBS.' )
@@ -73,14 +74,33 @@ DECLARE
       S.* 
      ,TP.PARTITION_POSITION TP_POS
      ,IP.PARTITION_POSITION IP_POS
+     ,CASE WHEN S.SEGMENT_TYPE IN ('LOBSEGMENT', 'LOBINDEX' ) 
+        THEN
+          (SELECT OBJECT_NAME 
+          FROM DBA_OBJECTS
+          WHERE OBJECT_ID = TO_NUMBER( SUBSTR( S.SEGMENT_NAME, 8, INSTR( S.SEGMENT_NAME, 'C0' ) - 8 ) ) )
+        ELSE
+          S.SEGMENT_NAME 
+      END SEG_NAME2
     FROM SEGS S
     LEFT JOIN DBA_TAB_PARTITIONS TP ON (TP.TABLE_OWNER = S.OWNER AND TP.TABLE_NAME = S.SEGMENT_NAME AND TP.PARTITION_NAME=S.PARTITION_NAME)
     LEFT JOIN DBA_IND_PARTITIONS IP ON (IP.INDEX_OWNER = S.OWNER AND IP.INDEX_NAME = S.SEGMENT_NAME AND IP.PARTITION_NAME=S.PARTITION_NAME)
     ORDER BY
-      -- S.NAME, 
-      DECODE( SUBSTR(S.SEGMENT_TYPE, 1, 5), 'TABLE', 1, 'INDEX', 2, 3 ),
-      DECODE( SUBSTR(S.SEGMENT_NAME, 1, 3), 'PK_', 1, 'UK_', 2, 3 ),
-      S.SEGMENT_NAME, NVL( TP.PARTITION_POSITION, IP.PARTITION_POSITION );
+      CASE WHEN SEG_NAME2 LIKE 'DR$%' OR SEG_NAME2 LIKE 'DRC$%' 
+        THEN 6
+        ELSE DECODE( SUBSTR(S.TIPO, 1, 6), 'TABELA', 1, 'INDICE', 2, 'LOBSEG', 3, 'LOBIDX', 4, 5 ) END, 
+      CASE WHEN SEG_NAME2 LIKE 'DR$%' OR SEG_NAME2 LIKE 'DRC$%' 
+        THEN 4
+        ELSE DECODE( SUBSTR(SEG_NAME2, 1, 2), 'PK', 1, 'UK', 2, 'IX', 3, 0 ) END, 
+      CASE 
+        WHEN SEG_NAME2 LIKE 'DR$%' THEN SUBSTR( SEG_NAME2, 3, LENGTH( SEG_NAME2 ) )
+        WHEN  SEG_NAME2 LIKE 'DRC$%' THEN SUBSTR( SEG_NAME2, 4, LENGTH( SEG_NAME2 )-5 )
+        ELSE SEG_NAME2 END, 
+      CASE WHEN SEG_NAME2 LIKE 'DR$%' OR SEG_NAME2 LIKE 'DRC$%' 
+        THEN DECODE( SUBSTR(S.TIPO, 1, 6), 'INDICE', 1, 'TABELA', 2, 'LOBSEG', 3, 'LOBIDX', 4, 5 )
+        ELSE 6 END,
+      NVL( TP.PARTITION_POSITION, IP.PARTITION_POSITION )
+      ;
 
   PROCEDURE IMPRIME_DETALHE
     (CPART VARCHAR2, TOT_MEGAS NUMBER, EMPTY_MEGAS NUMBER, NFRAGS NUMBER, VAR_NEXT VARCHAR2,
@@ -100,18 +120,18 @@ DECLARE
     IF PCT_OCUP >= &P_PCTOCUP. or TOT_MEGAS >= &P_MEGAS. THEN
 
       IF FIRST THEN
-        DBMS_OUTPUT.PUT_LINE( '.---------------------------------------------------------------------.--------------------------.--------------.-------------------------.' );
-        DBMS_OUTPUT.PUT_LINE( '|                                                                     |    ESPA«O UTILIZADO      |   EXTENTS    |  PAR¬METROS DE BLOCO    |' );
-        DBMS_OUTPUT.PUT_LINE( '|OBJETO                                      (*Next = PCTINCREASE > 0)| TOTAL_MB VAZIO_MB OCUPADO| FRAGS NEXT_MB|%FREE %USED ITRANS MTRANS|' );
-        DBMS_OUTPUT.PUT_LINE( '|---------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
+        DBMS_OUTPUT.PUT_LINE( '+-------------------------------------------------------------------------------+--------------------------+--------------+-------------------------+' );
+        DBMS_OUTPUT.PUT_LINE( '|                                                                               |    ESPACO UTILIZADO      |   EXTENTS    |  PARAMETROS DE BLOCO    |' );
+        DBMS_OUTPUT.PUT_LINE( '|OBJETO                                                (*Next = PCTINCREASE > 0)| TOTAL_MB VAZIO_MB OCUPADO| FRAGS NEXT_MB|%FREE %USED ITRANS MTRANS|' );
+        DBMS_OUTPUT.PUT_LINE( '|-------------------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
         FIRST := FALSE;
         PRIMEIRA_PART := FALSE;
       ELSIF PRIMEIRA_PART THEN
-        DBMS_OUTPUT.PUT_LINE( '|---------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
+        DBMS_OUTPUT.PUT_LINE( '|-------------------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
         PRIMEIRA_PART := FALSE;
       END IF;
 
-      DBMS_OUTPUT.PUT     ( RPAD( CPART                                               , 70, ' ' ) || '|' );
+      DBMS_OUTPUT.PUT     ( RPAD( CPART                                               , 80, ' ' ) || '|' );
       DBMS_OUTPUT.PUT     ( LPAD( TO_CHAR(TOT_MEGAS             , 'fm999g990D00')     ,  9, ' ' ) );
       DBMS_OUTPUT.PUT     ( LPAD( TO_CHAR(EMPTY_MEGAS           , 'fm999990D00' )     ,  9, ' ' ) );
       DBMS_OUTPUT.PUT     ( LPAD( TO_CHAR(PCT_OCUP              , 'fm990D00'    )||'%',  8, ' ' ) || '|' );
@@ -123,7 +143,7 @@ DECLARE
       DBMS_OUTPUT.PUT_LINE( LPAD( TO_CHAR(PMAXTRANS             , 'fm990'       )||'|',  8, ' ' ) );
 
       IF ULTIMA_PART THEN
-        DBMS_OUTPUT.PUT_LINE( '|---------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
+        DBMS_OUTPUT.PUT_LINE( '|-------------------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
       ELSE
         PG_TOT_MEGAS   := PG_TOT_MEGAS + TOT_MEGAS;
         PG_EMPTY_MEGAS := PG_EMPTY_MEGAS + EMPTY_MEGAS;
@@ -157,13 +177,7 @@ BEGIN
           SEGTYPE := C.SEGMENT_TYPE;
         END IF;
 
-        IF C.SEGMENT_TYPE IN ('LOBSEGMENT', 'LOBINDEX' ) THEN
-          SELECT OBJECT_NAME INTO CNOME
-          FROM DBA_OBJECTS
-          WHERE OBJECT_ID = TO_NUMBER( SUBSTR( C.SEGMENT_NAME, 8, INSTR( C.SEGMENT_NAME, 'C0' ) - 8 ) );
-        ELSE
-          CNOME := C.SEGMENT_NAME;
-        END IF;
+        CNOME := C.SEG_NAME2;
 
         DBMS_SPACE.UNUSED_SPACE( C.OWNER, C.SEGMENT_NAME, SEGTYPE, TOT_BLOCKS,
                                  TBY, EMPTY_BLOCKS, UBY, LUEF, LUEBI, LUB, C.PARTITION_NAME );
@@ -177,7 +191,7 @@ BEGIN
       END;
       
       -- NESTA HORA, FILTRA OS SEGMENTOS ESCOLHIDOS.
-      -- SE CNOME N√O ATENDER O FILTRO V_SEG, ABORTA E PASSA PARA O PROXIMO SEGMENTO
+      -- SE CNOME N√ÉO ATENDER O FILTRO V_SEG, ABORTA E PASSA PARA O PROXIMO SEGMENTO  
       IF SUBSTR( V_SEG, 1, 1 ) = '(' THEN
         IF INSTR( V_SEG, CNOME ) = 0 THEN
           RAISE no_data_found;
@@ -276,9 +290,13 @@ BEGIN
       END IF;
 
       IF LAST_WAS_PART AND NOT RESUMIR THEN
-        CPART := '| - PART ' || C.PARTITION_NAME ||'('||VHIBOUNDVAL||')';
+         IF VHIBOUNDVAL IS NOT NULL THEN
+           CPART := '| - PART ' || C.PARTITION_NAME ||'('||VHIBOUNDVAL||')';
+         ELSE
+           CPART := '| - PART ' || C.PARTITION_NAME;
+         END IF;
       ELSE
-         CPART := '|' || C.TIPO || ' ' || LPAD(C.TABLESPACE_NAME, 12, ' ' ) || ':' || C.OWNER || '.' || CNOME;
+         CPART := '|' || C.TIPO || ' ' || LPAD(C.TABLESPACE_NAME, 20, ' ' ) || ':' || C.OWNER || '.' || CNOME;
       END IF;
 
       IF NOT ( RESUMIR AND LAST_WAS_PART ) THEN
@@ -289,7 +307,7 @@ BEGIN
           );
       END IF;
 
-      CPART := '|' || C.TIPO || ' ' || LPAD(C.TABLESPACE_NAME, 12, ' ' ) || ':' || C.OWNER || '.' || CNOME;
+      CPART := '|' || C.TIPO || ' ' || LPAD(C.TABLESPACE_NAME, 20, ' ' ) || ':' || C.OWNER || '.' || CNOME;
       
     EXCEPTION
       WHEN NO_DATA_FOUND THEN
@@ -319,13 +337,13 @@ BEGIN
       END IF;
 
       IF RESUMIR OR (NOT LAST_WAS_PART) THEN
-        DBMS_OUTPUT.PUT_LINE( '|---------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
+        DBMS_OUTPUT.PUT_LINE( '|-------------------------------------------------------------------------------|--------- -------- -------|------ -------|----- ----- ------ ------|' );
       END IF;
-      DBMS_OUTPUT.PUT_LINE( '| TOTAIS GERAIS ----------------------------------------------------- |'||
+      DBMS_OUTPUT.PUT_LINE( '| TOTAIS GERAIS --------------------------------------------------------------- |'||
                             LPAD( TO_CHAR(G_TOT_MEGAS  , 'fm9g999g990'),  9, ' ' ) ||
                             LPAD( TO_CHAR(G_EMPTY_MEGAS, 'fm9g999g990'),  9, ' ' ) ||
                             LPAD( TO_CHAR(PCT, 'fm990D00')||'%',  8, ' ' ) || '| ----   ----- | ---   ---   ----   ---- |' );
-      DBMS_OUTPUT.PUT_LINE( '∑---------------------------------------------------------------------∑--------------------------∑--------------∑-------------------------∑' );
+      DBMS_OUTPUT.PUT_LINE( '+-------------------------------------------------------------------------------+--------------------------+--------------+-------------------------+' );
     END;
     
   END IF;

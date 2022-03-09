@@ -22,6 +22,7 @@ SELECT /* cGetSqlTxt */
  ,parsing_schema_name parse_user
  ,lpad( trim(USERS_OPENING)||'/'||trim(USERS_EXECUTING), 6, ' ' ) "Abrindo"
  ,executions, rows_processed "Linhas"
+ ,sql_id
  ,disk_reads, disk_reads/decode(executions,0, 1,executions) "PorExec"
  ,buffer_gets, buffer_gets/decode(executions,0, 1,executions) "PorExec"
  ,lpad( trim(trunc(cpu_time/1000))||'/'||trim(trunc(elapsed_time/1000)), 16, ' ' ) times 

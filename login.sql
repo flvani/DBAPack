@@ -20,7 +20,7 @@ select
   'SQLPROMPT "' || lower(user) ||'@'|| lower(instance_name) ||'.'|| replace(lower(host_name), '.redecamara.camara.gov.br', '' ) || '> "' p_new_prompt,
   decode( '&OS.', 'Linux', '/tmp/'  , '%TEMP%\\'        ) p_temp_path,
   decode( '&OS.', 'Linux', 'rm '    , 'del '            ) p_del_cmd,
-  decode( '&OS.', 'Linux', 'gedit ' , '"notepad++.exe"' ) p_txt_editor
+  decode( '&OS.', 'Linux', 'gedit ' , '"C:\\Program Files\\Notepad++\\notepad++.exe"' ) p_txt_editor
 from v$instance
 /
 

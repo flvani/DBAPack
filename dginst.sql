@@ -1,4 +1,4 @@
-SET VERIFY OFF SERVEROUT ON FEEDBACK OFF UNDERLINE '~' LINES 200
+SET VERIFY OFF SERVEROUT ON FEEDBACK OFF UNDERLINE '~' LINES 221
 
 col db_name format a9
 col inst_name format a9
@@ -11,8 +11,13 @@ col st2 format a14 heading "System Date" noprint
 col st4 format a12 heading "Running Secs" noprint
 col scn format a20 just r
 
+COL RECOVERY_MODE FORMAT A30
+COL SWITCHOVER_STATUS FORMAT A30
+COL PROTECTION_MODE FORMAT A30
+ 
+
 PROMPT
-PROMPT ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
+PROMPT ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
 
 select
    i.inst_id
@@ -45,27 +50,50 @@ ORDER BY i.INST_ID
 /
 
 
+COL INST_ID FORMAT 9999 TRUNC
+COL DEST_ID FORMAT 9999 TRUNC
+COL STATUS FORMAT A10 TRUNC
+COL TYPE FORMAT A15 TRUNC
+COL DESTINATION FORMAT A30 TRUNC
+COL RECOVERY_MODE FORMAT A24 TRUNC
+COL ARCHIVED_THREAD# HEAD "ARCHIVED|THREAD#"
+COL ARCHIVED_SEQ# HEAD "ARCHIVED|SEQUENCE#"
+COL APPLIED_THREAD# HEAD "APPLIED|THREAD#"
+COL APPLIED_SEQ# HEAD "APPLIED|SEQUENCE#"
+COL ERROR FORMAT A71 TRUNC
+
+SELECT 
+   DS.INST_ID, DS.DEST_ID, DS.TYPE, DS.DESTINATION, DS.STATUS, DS.RECOVERY_MODE
+  ,DS.ARCHIVED_THREAD#, DS.ARCHIVED_SEQ#, DS.APPLIED_THREAD#, DS.APPLIED_SEQ#, DS.ERROR
+FROM GV$ARCHIVE_DEST_STATUS DS
+WHERE DS.STATUS NOT IN ( 'INACTIVE' )
+AND   DS.TYPE NOT IN ( 'UNKNOWN' );
+
 SELECT INST_ID, PROCESS, STATUS, THREAD#, SEQUENCE#
 FROM GV$MANAGED_STANDBY
 ORDER BY INST_ID;
 
-SELECT inst_id, DEST_ID, STATUS, RECOVERY_MODE, ARCHIVED_THREAD#, ARCHIVED_SEQ#, APPLIED_THREAD#, APPLIED_SEQ#, ERROR
-FROM GV$ARCHIVE_DEST_STATUS 
-WHERE STATUS <> 'INACTIVE';
+COL VALUE FORMAT A18
+COL NAME FORMAT A30 HEAD STATISTIC
+COL SOURCE_DBID FORMAT 9999999999999999
+COL SOURCE_DB_UNIQUE_NAME HEAD SOURCE_NAME FORMAT A14
 
+select source_dbid, source_db_unique_name, name, value, unit from v$dataguard_stats;
 
-col value format a15
-col name format a30
-
-select * from v$dataguard_stats;
+COL MESSAGE FORMAT A115 HEAD "LAST MESSAGES (15 minutes)" TRUNC
+ 
+select TO_CHAR( timestamp, 'DD/MM HH24:MI:SS' ) TIMESTAMP, facility, severity, error_code, message 
+from V$DATAGUARD_STATUS 
+WHERE timestamp > (SYSDATE - 15/1440)
+order by 1;
 
 PROMPT
 SET FEEDBACK 6 UNDERLINE '-'
 
-PROMPT ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
-PROMPT
-
+PROMPT ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~
+PROMPT 
 col st1 clear
 col st2 clear
 col st3 clear
 col st4 clear
+COL MESSAGE CLEAR

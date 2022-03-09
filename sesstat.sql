@@ -34,6 +34,8 @@ and s.sid = &p_sid.
 and s.inst_id = &p_inst
 /
 
+exec dbms_lock.sleep(10);
+ 
 CREATE GLOBAL TEMPORARY TABLE TMP_S2 
 AS SELECT * FROM TMP_S1
 /

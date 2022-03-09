@@ -3,10 +3,10 @@ SET DEFINE ON
 DEFINE P_TBS="&1."
 DEFINE P_OWNER="&2."
 DEFINE P_SEG="&3."
-DEFINE P_AGRUPAR='NO'
+DEFINE P_AGRUPAR='yes'
 DEFINE P_RESUMIR='yes'
-DEFINE P_SORT='SIZE'
 DEFINE P_SORT='TABLE'
+DEFINE P_SORT='SIZE'
 DEFINE P_MEGAS=0
 DEFINE P_PCTOCUP=100
 
@@ -15,8 +15,8 @@ DEFINE P_PCTOCUP=100
 rem @@do.monitsegs.sql
 
 PROMPT
+PROMPT Para obter o resumo dos objetos use @monitsegs &p_tbs. &p_owner. &p_seg.
 PROMPT Para obter o detalhamento de partições use @monitsegsd &p_tbs. &p_owner. &p_seg.
-PROMPT Para obter o resumo agrupado por tabela objetos use @monitsegss &p_tbs. &p_owner. &p_seg.
 PROMPT
 
 UNDEFINE 1

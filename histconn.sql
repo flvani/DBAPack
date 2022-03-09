@@ -1,14 +1,18 @@
-SET LINES 200 PAGES 100 FEED OFF VERIFY OFF
+SET LINES 200 PAGES 800 FEED OFF VERIFY OFF
 
 VAR N NUMBER
 COL COL1 NEW_VALUE extenso
 COL COL2 NEW_VALUE un
 
+DEFINE DOMAIN=REDECAMARA\
+
 PROMPT
 PROMPT INTERVALO: "s" para histograma em segundos ou "m" para histograma em minutos
 SET TERMOUT OFF
+DEFINE p_resumir='YES'
+DEFINE p_resumir="UPPER('&1.')"
 BEGIN
-  IF lower('&1.') = 's' THEN
+  IF lower('&2.') = 's' THEN
     :N := 60;
   ELSE
     :N :=  1;
@@ -21,14 +25,14 @@ SELECT
 FROM DUAL
 /
 SET TERMOUT ON
-PROMPT USUÁRIO: Digite o NOME ou %PARTE%
+PROMPT USUARIO: Digite o NOME ou %PARTE%
 SET TERMOUT OFF
-DEFINE p_user=&2.
+DEFINE p_user=&3.
 SET TERMOUT ON
 
 col "Hora Atual"    format a15
-col username        format a45 Head "User.Machine"
-col event           format a35 Head "Evento de Espera" trunc
+col username        format a60 Head "User.Machine" trunc
+col event           format a35 Head "Wait Event" trunc
 COL sess            format a25 Head " Sid,Serial#,@I  SPId Svr"
 COL seconds_in_wait format  999G999G999 HEAD "Wait(s)"
 
@@ -43,7 +47,7 @@ col "45-60" format a7     head "45&un.-60&un.|At/Cr"
 col " >=60" format a7     head " >= 60&un.|At/Cr"
 
 PROMPT
-PROMPT HISTOGRAMA DE CONEXÕES (filtrando usuário &p_user.)
+PROMPT HISTOGRAMA DE CONEX0ES (filtrando usuario &p_user.)
 
 select to_char(sysdate, 'dd/mm/yy hh24:mi' ) "Hora Atual"
 from dual
@@ -52,8 +56,13 @@ from dual
 PROMPT
 PROMPT HISTOGRAMA POR HORARIO DE CRIACAO (tempo em &extenso.)
 select
-   trim(lower(username) ||'.'||
-   lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1))) ) username
+   TRIM(
+     LOWER(s.username) ||
+     CASE 
+       WHEN &p_resumir. = 'YES' THEN ''
+       ELSE '.'|| lower(decode(instr(s.machine, '.'), 0, replace(s.machine, '&DOMAIN.',''), substr(s.machine, 1, instr(s.machine, '.')-1))) 
+     END 
+   ) username
  , sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 0, decode( status, 'ACTIVE', 1, 0), 0 ) ) || '/' ||
    sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 0, 1, 0 ) ) "00-05"
  , sum( decode( trunc( (sysdate-logon_time)/( 5/(60*24*:n)), 0 ), 1, decode( status, 'ACTIVE', 1, 0), 0 ) ) || '/' ||
@@ -71,11 +80,16 @@ select
  , sum( decode( trunc( (sysdate-logon_time)/(60/(60*24*:n)), 0 ), 0, 0, decode( status, 'ACTIVE', 1, 0) ) ) || '/' ||
    sum( decode( trunc( (sysdate-logon_time)/(60/(60*24*:n)), 0 ), 0, 0, 1 ) ) " >=60"
  , sum( decode( status, 'ACTIVE', 1, 0) ) || '/' || count(*) sessoes
-from gv$session
-WHERE USERNAME like upper('&p_user.') AND STATUS <> 'KILLED'
+from gv$session s
+WHERE upper(s.USERNAME||'.'||s.machine) like upper('&p_user.') AND STATUS <> 'KILLED'
 group by
-   trim(lower(username) ||'.'||
-   lower(decode(instr(machine, '.'), 0, replace(machine, 'REDECAMARA\',''), substr(machine, 1, instr(machine, '.')-1))) )
+   TRIM(
+     LOWER(s.username) ||
+     CASE 
+       WHEN &p_resumir. = 'YES' THEN ''
+       ELSE '.'|| lower(decode(instr(s.machine, '.'), 0, replace(s.machine, '&DOMAIN.',''), substr(s.machine, 1, instr(s.machine, '.')-1))) 
+     END 
+   ) 
 order by 1
 /
 col sessoes format 999999 head "Total|Sessões"
@@ -89,14 +103,18 @@ col "45-60" format 999999 head "45&un.-60&un."
 col " >=60" format 999999 head " >= 60&un."
 
 BREAK ON REPORT
-COMPUTE SUM OF SESSOES ON REPORT
+COMPUTE SUM OF " >=60", SESSOES ON REPORT
 
 PROMPT
 PROMPT HISTOGRAMA POR TEMPO DE INATIVIDADE (tempo em &extenso.)
 SELECT
-   lower(s.username) ||'.'||
-   lower(decode(instr(s.machine, '.'), 0, replace(S.machine, 'REDECAMARA\',''), substr(s.machine, 1, instr(s.machine, '.')-1)))||
-   decode( s.status, 'ACTIVE','(ACTIVE)', '' ) username
+   TRIM(
+     LOWER(s.username) ||
+     CASE 
+       WHEN &p_resumir. = 'YES' THEN ''
+       ELSE '.'|| lower(decode(instr(s.machine, '.'), 0, replace(s.machine, '&DOMAIN.',''), substr(s.machine, 1, instr(s.machine, '.')-1))) 
+     END 
+   || decode( s.status, 'ACTIVE','(ACTIVE)', '' ) ) username
  , W.EVENT
  , SUM( decode( trunc( W.SECONDS_IN_WAIT/(60/:n)/05, 0 ), 0, 1, 0 ) ) "00-05"
  , SUM( decode( trunc( W.SECONDS_IN_WAIT/(60/:n)/05, 0 ), 1, 1, 0 ) ) "05-10"
@@ -108,31 +126,53 @@ SELECT
  , SUM( decode( trunc( W.SECONDS_IN_WAIT/(60/:n)/60, 0 ), 0, 0, 1 ) ) " >=60"
  , COUNT(*) sessoes
 FROM gV$SESSION S INNER JOIN gV$SESSION_WAIT W ON (S.SID=W.SID and s.inst_id=w.inst_id)
-WHERE USERNAME like upper('&p_user.') AND STATUS <> 'KILLED'
+WHERE upper(s.USERNAME||'.'||s.machine) like upper('&p_user.') AND STATUS <> 'KILLED'
 GROUP BY
-   lower(s.username) ||'.'||
-   lower(decode(instr(s.machine, '.'), 0, replace(S.machine, 'REDECAMARA\',''), substr(s.machine, 1, instr(s.machine, '.')-1)))||
-   decode( s.status, 'ACTIVE','(ACTIVE)', '' )
+   TRIM(
+     LOWER(s.username) ||
+     CASE 
+       WHEN &p_resumir. = 'YES' THEN ''
+       ELSE '.'|| lower(decode(instr(s.machine, '.'), 0, replace(s.machine, '&DOMAIN.',''), substr(s.machine, 1, instr(s.machine, '.')-1))) 
+     END 
+   || decode( s.status, 'ACTIVE','(ACTIVE)', '' ) ) 
    ,W.EVENT
-order by 1
+order by sessoes desc, 1
 /
 
+
 PROMPT
-PROMPT INATIVOS A MAIS DE MEIA HORA
+SET HEAD OFF
+SELECT 'INATIVOS A MAIS DE UMA HORA' 
+FROM DUAL
+WHERE &p_resumir. != 'YES'
+/
+SET HEAD ON
+COL wait_time FORMAT A15 head "Idle(secs)"
+COL create_time FORMAT A15 head "Create time"
+
+BREAK ON REPORT
+COMPUTE COUNT OF TYPE ON REPORT
+
 SELECT /*+RULE*/
    LPAD( ''''||S.SID||','||S.SERIAL#||',@'||S.INST_id||'''',15,' ') || LPAD( TO_NUMBER(P.SPID), 6, ' ' ) ||
    DECODE(S.SERVER, 'DEDICATED', ' DED', ' MTS' )  SESS
  , lower(s.username) ||'.'||
-   lower(decode(instr(s.machine, '.'), 0, replace(S.machine, 'REDECAMARA\',''), substr(s.machine, 1, instr(s.machine, '.')-1)))||
+   lower(decode(instr(s.machine, '.'), 0, replace(S.machine, '&DOMAIN.',''), substr(s.machine, 1, instr(s.machine, '.')-1)))||
    decode( s.status, 'ACTIVE','(ACTIVE)', '' ) username
- , W.SECONDS_IN_WAIT
+ , to_char( S.LOGON_TIME, 'dd/mm hh24:mi' ) create_time
+ --, W.SECONDS_IN_WAIT
+ , cast( NUMTODSINTERVAL (W.SECONDS_IN_WAIT, 'second') as interval day(2) to second(0) ) wait_time
  , W.EVENT
-FROM gV$SESSION S
-INNER JOIN gV$SESSION_WAIT W ON (S.SID=W.SID and s.inst_id=w.inst_id)
-INNER JOIN gV$PROCESS P ON (S.PADDR = P.ADDR and s.inst_id=p.inst_id)
-WHERE S.USERNAME like upper('&p_user.') AND S.STATUS <> 'KILLED'
-AND   W.SECONDS_IN_WAIT > 1800
-ORDER BY W.SECONDS_IN_WAIT
+ , S.TYPE
+FROM GV$SESSION S
+INNER JOIN GV$SESSION_WAIT W ON (S.SID=W.SID and s.inst_id=w.inst_id)
+INNER JOIN GV$PROCESS P ON (S.PADDR = P.ADDR and s.inst_id=p.inst_id)
+WHERE upper(s.USERNAME||'.'||s.machine) like upper('&p_user.') AND S.STATUS <> 'KILLED' 
+AND S.TYPE = 'USER'
+--AND S.USERNAME NOT LIKE 'SYS%'
+AND   W.SECONDS_IN_WAIT > 3600 -- *24
+AND   &p_resumir. != 'YES'
+ORDER BY W.SECONDS_IN_WAIT DESC
 /
 
 

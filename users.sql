@@ -8,3 +8,5 @@ select 'ROLE', role from dba_roles where upper(role) like upper('&name.')
 order by 1 desc, 2 asc
 /
 prompt
+
+set veri off feed 6

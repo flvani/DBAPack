@@ -2,7 +2,29 @@ set autotrace off timing off
 SET VERIFY OFF
 --DEFINE SIFUS=USR_SIAFI_OLD
 
---alter session set current_schema=usr_folhacd;
+14:52:56 p_7236@dgotppro6.vpropus6> show parameter adap
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- --------------------------------------------------
+fileio_network_adapters              string
+optimizer_adaptive_features          boolean     TRUE
+optimizer_adaptive_reporting_only    boolean     FALSE
+parallel_adaptive_multi_user         boolean     TRUE
+14:53:05 p_7236@dgotppro6.vpropus6> show parameter base
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- --------------------------------------------------
+cluster_database                     boolean     FALSE
+cluster_database_instances           integer     1
+enable_pluggable_database            boolean     FALSE
+optimizer_capture_sql_plan_baselines boolean     FALSE
+optimizer_use_sql_plan_baselines     boolean     TRUE
+
+alter session set optimizer_use_sql_plan_baselines=false;
+alter session set optimizer_adaptive_features=false;
+alter session set current_schema=usr_folhacd;
+set autotrace traceonly explain
+
 
 /*
 ALTER SESSION SET NLS_SORT='BINARY'
@@ -26,20 +48,4 @@ ALTER SESSION SET NLS_COMP='ANSI'
 --alter session enable parallel dml;
 
 EXPLAIN PLAN SET STATEMENT_ID='&1.' INTO sys.plan_table$ FOR
-update /*+ rule */ usr_dw_sisconle.ft_etapa_situacao_solicitacao 
-set ide_dim_ultima_situacao_mes = 800
-where (ide_dim_etapa_solicitacao_trab,ide_data_etapa) in 
-(select etapa_ante.ide_dim_etapa_solicitacao_trab, etapa_ante.ide_data_etapa --,etapa_ante.ide_dim_solicitacao_trabalho
-from usr_dw_sisconle.ft_etapa_situacao_solicitacao etapa_ante
-inner join usr_dw_corporativo.dimtempo dimtempo_ante
-        on dimtempo_ante.IDETEMPO = etapa_ante.ide_data_etapa
-inner join (select etapa_final.ide_dim_solicitacao_trabalho, etapa_final.ide_Dim_situacao_etapa, etapa_final.ide_data_etapa, dimtempo.CODANO, dimtempo.codmes  
-                from usr_dw_sisconle.ft_etapa_situacao_solicitacao etapa_final
-                  inner join usr_dw_corporativo.dimtempo dimtempo
-                          on dimtempo.IDETEMPO = etapa_final.ide_data_etapa
-                  where etapa_final.ide_Dim_situacao_etapa = 800) etapa_final -- Retorna todas etapas Canceladas
-      on etapa_final.ide_dim_solicitacao_trabalho = etapa_ante.IDE_DIM_SOLICITACAO_TRABALHO
-      and etapa_final.codano = dimtempo_ante.codano
-      and etapa_final.codmes = dimtempo_ante.codmes
-where etapa_ante.ide_dim_ultima_situacao_mes not in (800,9999)) -- altera etapas diferentes de Canceladas ou Ajustes no mesmo dia da etapa Cancelada
-/
+SELECT * FROM DUAL;

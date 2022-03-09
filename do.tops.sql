@@ -11,17 +11,19 @@ DEFINE BKGRD=&4.   -- mostrar processos de background on não
 DEFINE ATIVOS=&5.
 DEFINE GLOBAL="YES"  -- usar GV$ 
 
-COL RANK         FORMAT             A4 HEAD "Rank"
-COL STATUS       FORMAT             A6 HEAD "Status"
-COL LOGON_TIME   FORMAT            A11 HEAD "Login"
-COL CHAMADA      FORMAT            A11 HEAD "Chamada"
+COL RANK         FORMAT              A4 HEAD "Rank"
+COL STATUS       FORMAT              A6 HEAD "Status"
+COL LOGON_TIME   FORMAT             A11 HEAD "Login"
+COL CHAMADA      FORMAT             A11 HEAD "Chamada"
 COL LREADS       FORMAT 999G999G999G990 HEAD "Logical Reads"
-COL WAITS        FORMAT            A26 HEAD "Wait"
-COL SQL_ID       FORMAT            A13 HEAD "Sql ID"
-COL SQL_TEXT     FORMAT            A90 HEAD "Sql Statement" TRUNC
-COL MACHINE      FORMAT            A23 HEAD "Machine"       TRUNC
-COL PROGRAMA     FORMAT            A15 HEAD "Programa"      TRUNC
-COL CLI_ID       FORMAT            A20 HEAD "Cliente"     TRUNC
+COL AVG_LREADS   FORMAT     999G999G990 HEAD "AVG Reads(s)"
+COL CPU_TIME     FORMAT     999G999G990 HEAD "CPU Time(s)"
+COL WAITS        FORMAT             A26 HEAD "Wait"
+COL SQL_ID       FORMAT             A13 HEAD "Sql ID"
+COL SQL_TEXT     FORMAT             A90 HEAD "Sql Statement" TRUNC
+COL MACHINE      FORMAT             A23 HEAD "Machine"       TRUNC
+COL PROGRAMA     FORMAT             A15 HEAD "Programa"      TRUNC
+COL CLI_ID       FORMAT             A20 HEAD "Cliente"       TRUNC
 
 COLUMN cls_where new_value cls_where NOPRINT;
 COLUMN cls_no_background new_value cls_no_background NOPRINT;
@@ -39,9 +41,9 @@ COLUMN p_scope  new_value p_scope NOPRINT;
 
 --COL SPID       FORMAT          99999 HEAD "SPId" print
 --COL DREADS     FORMAT    999G999G990 HEAD "Disk Reads"
---COL SERVER     FORMAT            A1  HEAD "M"
+--COL SERVER     FORMAT             A1 HEAD "M"
 
-SET VERIFY OFF TERMOUT OFF LINES 320 DEFINE ON FEEDBACK OFF
+SET VERIFY OFF TERMOUT OFF LINES 330 DEFINE ON FEEDBACK OFF
 
 SELECT
   decode( '&BKGRD.', 'YES', '', 'AND S.TYPE <> ''BACKGROUND'' ' ) cls_no_background
@@ -53,10 +55,9 @@ SELECT
  ,decode( '&ATIVOS.', 'YES', ' ativos)', ')' ) v_complemento
  ,&n_tops. + 8 v_pagesize
  ,case version 
-     when '12.1.0.2.0' then '14'    -- estatisticas listadas no 12.1.0.2
-     when '11.2.0.2.0' then '66,70' -- estatisticas listadas no 11.2.0.2
-     when '11.2.0.1.0' then '63,67' -- estatisticas listadas no 11.2.0.1
-     else '9'                       -- estatisticas listadas no 10g e anteriores 
+     when '11.2.0.2.0' then '66,70'    -- estatisticas listadas no 11.2.0.2
+     when '11.2.0.1.0' then '63,67'    -- estatisticas listadas no 11.2.0.1
+     else '14'                         -- estatisticas listadas 12.1 em diante (pelo menos até o 19c)
   end cls_stats
 FROM v$instance
 /
@@ -75,8 +76,13 @@ BEGIN
   :V1 := '';
   :V2 := '';
 
+--    , CLI_ID
+
+  
   IF INSTR( '0123456789', SUBSTR( :B1, 1, 1 )) > 0 THEN
     :V1 := 'AND S.SID IN (' || :B1 || ')';
+  ELSIF SUBSTR( :B1, 1, 1 ) = '+' THEN
+    :V1 := 'AND LOWER( NVL( S.CLIENT_IDENTIFIER, S.OSUSER )) LIKE '''||SUBSTR( LOWER(:B1), 2, LENGTH(:B1))||'''';
   ELSIF SUBSTR( :B1, 1, 1 ) = '#' THEN
     :V1 := 'AND (S.INST_ID,S.PADDR) IN ( SELECT INST_ID,P.ADDR FROM &p_gv.$PROCESS P WHERE P.SPID IN (' || SUBSTR( :B1, 2, LENGTH(:B1)) || '))';
   ELSIF SUBSTR( :B1, 1, 1 ) = '@' THEN
@@ -86,7 +92,7 @@ BEGIN
   ELSIF :B1 = '%' THEN
     :V1 := '';
   ELSIF :B1 IS NOT NULL THEN
-    :V1 := 'AND TRIM(UPPER(SUBSTR(DECODE(S.USERNAME, NULL, SUBSTR(P.PROGRAM,INSTR(P.PROGRAM,''('')+1,4), S.USERNAME),1,24))) LIKE UPPER( '''||:B1||''' )';
+    :V1 := 'AND TRIM(UPPER(SUBSTR(DECODE(S.USERNAME, NULL, SUBSTR(P.PROGRAM,INSTR(P.PROGRAM,''('')+1,4), S.USERNAME),1,30))) LIKE UPPER( '''||:B1||''' )';
                                
   END IF;
   
@@ -109,7 +115,7 @@ FROM DUAL
 
 SET TERMOUT ON PAGES &v_pagesize.;
 
-COL USERNAME FORMAT A50 HEAD "TOP SESSIONS (&N_TOPS. primeiros&v_complemento.|&p_scope. - Background: &bkgrd.|| Sid,Serial#,@I  SPId Svr OraUser" TRUNC
+COL USERNAME FORMAT A51 HEAD "TOP SESSIONS (&N_TOPS. primeiros&v_complemento.|&p_scope. - Background: &bkgrd.|| Sid,Serial#,@I  SPId Svr OraUser" TRUNC
 
 REM PROMPT
 REM PROMPT DEBUG WHERE        : &CLS_WHERE.
@@ -128,15 +134,20 @@ WITH TOP_SESSIONS AS
   SELECT 
      &p_s_inst. INST, S.SID, S.SERIAL# SERIAL, S.STATUS, S.SERVER, P.SPID, S.OSUSER, S.CLIENT_IDENTIFIER
     ,TO_CHAR( S.LOGON_TIME, 'DD/MM HH24:MI' ) LOGON_TIME
-    ,LOWER(SUBSTR(S.MACHINE,1,23)) MACHINE, S.TYPE, SS.VALUE LREADS
+    ,NVL(ROUND(SS.LREADS/NULLIF((SYSDATE-S.LOGON_TIME)*24*60*60,0),0),0) AVG_LREADS
+    ,LOWER(SUBSTR(S.MACHINE,1,23)) MACHINE, S.TYPE, SS.LREADS , SS1.CPU_TIME
     ,S.CLIENT_INFO, TO_CHAR( SYSDATE - (S.LAST_CALL_ET/86400), 'DD/MM HH24:MI' ) CHAMADA
     ,S.PROGRAM PROGRAMA, S.PADDR, S.SQL_ID, S.SQL_ADDRESS
-    ,SUBSTR(DECODE(S.USERNAME, NULL, SUBSTR(P.PROGRAM,INSTR(P.PROGRAM,'(')+1,4), S.USERNAME),1,24) USERNAME
+    ,SUBSTR(DECODE(S.USERNAME, NULL, SUBSTR(P.PROGRAM,INSTR(P.PROGRAM,'(')+1,4), S.USERNAME),1,25) USERNAME
   FROM &p_gv.$SESSION S
-  JOIN( SELECT &p_s_inst. INST, S.SID, SUM(VALUE) VALUE 
+  JOIN( SELECT &p_s_inst. INST, S.SID, SUM(VALUE) LREADS
         FROM &p_gv.$SESSTAT S WHERE S."STATISTIC#" in (&N_STAT.) 
         GROUP BY &p_s_inst., SID ) SS
     ON (S.SID = SS.SID  AND &p_s_inst. = SS.INST)
+  JOIN( SELECT &p_s_inst. INST, S.SID,  round(SUM(VALUE)/100,0)  CPU_TIME 
+        FROM &p_gv.$SESSTAT S WHERE S."STATISTIC#" in (19)  -- cpu used by this session
+        GROUP BY &p_s_inst., SID ) SS1
+    ON (S.SID = SS1.SID  AND &p_s_inst. = SS1.INST)
   LEFT JOIN &p_gv.$PROCESS P
     ON (S.PADDR = P.ADDR AND &p_s_inst. = &p_p_inst.)
   WHERE 1 = 1
@@ -144,7 +155,8 @@ WITH TOP_SESSIONS AS
   &CLS_WHERE_ACTIVE.
   &CLS_NO_BACKGROUND
   and rownum <= &N_TOPS. 
-  ORDER BY SS.VALUE DESC 
+  --ORDER BY SS.LREADS DESC 
+  ORDER BY NVL(ROUND(SS.LREADS/NULLIF((SYSDATE-S.LOGON_TIME)*24*60*60,0),0),0) DESC
 --FETCH FIRST &N_TOPS. ROWS ONLY
 ),
 RANKED_SESSIONS AS
@@ -164,7 +176,9 @@ SELECT
   ,SE.LOGON_TIME
   ,SE.CHAMADA
   ,SE.SQL_ID
+  ,SE.AVG_LREADS
   ,SE.LREADS
+  ,SE.CPU_TIME
   ,SUBSTR( W.EVENT, 1, 26 ) WAITS
   ,SE.MACHINE
   ,SE.PROGRAMA

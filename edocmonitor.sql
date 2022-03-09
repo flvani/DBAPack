@@ -51,7 +51,7 @@ order by to_date(dt_start, 'yyyy/mm/dd hh24:mi:ss')
 prompt
 prompt ############################################################################################
 prompt Sentencas EDOC que demoraram mais de &nlimite. segundos, a partir de &START_DATE.
-prompt NOTA: nx_prepare_user_read_acls(:1) excluida da listagem
+rem prompt NOTA: nx_prepare_user_read_acls(:1) excluida da listagem
 prompt ##################################################
 
 SELECT rownum rank, v.* 
@@ -76,8 +76,8 @@ FROM (
   and  x1.username = 'EXT_SMARTECM'
   and  x1.elapsed_time/1000000 > &nlimite.
   --and  x1.sql_id = 'a9yr4qy05y1yc'
-  and  x1.sql_text not like 'BEGIN nx_prepare_user_read_acls%'
-  and  x1.sql_text not like 'BEGIN nx_update_read_acls%'
+  --and  x1.sql_text not like 'BEGIN nx_prepare_user_read_acls%'
+  --and  x1.sql_text not like 'BEGIN nx_update_read_acls%'
   and to_date(x1.sql_exec_start, 'MM/DD/YYYY HH24:MI:SS') >= to_date( '&START_DATE.', 'DD/MM/YYYY HH24:MI:SS' )
   --and to_date(x1.sql_exec_start, 'MM/DD/YYYY HH24:MI:SS') between trunc(sysdate) and sysdate
   order by 5 desc 

@@ -51,7 +51,7 @@ select
        ( 
         SELECT 
           CASE WHEN IOT_TYPE IS NULL THEN 'HEAP' ELSE 'IOT: ' || IOT_TYPE || ' (name:' || IOT_NAME || ')' END || ', TEMPORARY: ' || TEMPORARY || 
-          ', CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi' )
+          ', CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi:ss' )
         FROM dba_tables s 
         WHERE (o.owner=s.owner and o.object_name=s.table_name)
        )
@@ -63,8 +63,12 @@ select
           WHERE (o.owner=t.owner and o.object_name=t.name)
           order by t.last_refresh desc fetch first 1 rows only
        )
+     WHEN 'TABLE PARTITION' THEN 
+       'CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi:ss' ) || ', P.NAME: ' || o.subobject_name
+     WHEN 'TABLE SUBPARTITION' THEN 
+       'CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi:ss' ) || ', SUBP.NAME: ' || o.subobject_name
      ELSE 
-       'CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy' )
+       'CREATION: ' || to_char( o.created, 'dd/mm/yyyy' ) || ', LAST_DDL: ' || to_char( o.last_ddl_time, 'dd/mm/yyyy hh24:mi:ss' )
    END detalhes
 from dba_objects o
 &cls_where.
