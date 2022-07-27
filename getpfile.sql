@@ -4,12 +4,12 @@ col exp new_value exp
 define hidden=0
 set termout off verify off pages 1000 feed 1000 lines 250
 select 
-   nvl(to_number(p.value), 1 ) qt_inst
-  ,case when nvl(to_number(p.value), 1 ) > 1 then 'gv$parameter2 P' else 'v$parameter2 P' end vw
-  ,case when nvl(to_number(p.value), 1 ) > 1 then '(select instance_name from gv$instance i where i.inst_id=p.inst_id)||''.''' else '''''' end exp
+   1 qt_inst
+  ,case when nvl(to_char(p.value), 'FALSE' ) = 'TRUE' then 'gv$parameter2 P' else 'v$parameter2 P' end vw
+  ,case when nvl(to_char(p.value), 'FALSE' ) = 'TRUE' then '(select instance_name from gv$instance i where i.inst_id=p.inst_id)||''.''' else '''''' end exp
 from v$parameter2 p
 cross join  v$database d
-where p.name='cluster_database_instances'
+where p.name='cluster_database'
 /
 
 SET LONG 512

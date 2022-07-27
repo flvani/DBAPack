@@ -22,7 +22,9 @@ FROM
          || '-- Id '|| user_id || CHR(10)
          || '-- Created ' || to_char(created, 'dd/mm/yyyy hh24:mi' ) || CHR(10)
          || '-- AcState ' || account_status || decode( lock_date, null, '', ' since ' ) || to_char(lock_date, 'dd/mm/yyyy hh24:mi' ) || CHR(10)
-         || '-- Profile ' || profile OBJETO
+         || '-- Profile ' || profile  || CHR(10)
+         || '-- Passwd Versions ' || password_versions  || CHR(10)
+         || '-- Last login ' || to_char(last_login, 'dd/mm/rr' ) OBJETO
   FROM   DBA_USERS
   WHERE  USERNAME = &P1.
   UNION ALL
@@ -62,7 +64,7 @@ SELECT
      WHEN 'ROLE' THEN  CHR(10) || '/' || CHR(10) || CHR(10) || 'REVOKE ' || OBJETO || ' FROM ' || USER || CHR(10) || '/'
      WHEN 'USER' THEN 
        CHR(10) || (SELECT '      '|| REPLACE(STRAGG('QUOTA ' || DECODE( MAX_BYTES, -1, 'UNLIMITED', MAX_BYTES ) || ' ON '||TABLESPACE_NAME), ',', CHR(10)||'      ') 
-                   FROM DBA_TS_QUOTAS WHERE USERNAME = &P1.) || CHR(10) || '/'
+                   FROM DBA_TS_QUOTAS WHERE USERNAME = &P1.) || CHR(10) || ';'
    END DDL
   ,TIPO
 FROM OBJ
