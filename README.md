@@ -151,12 +151,13 @@ The *login.sql* file is reponsible for several environment sets. You should edit
 ```
  * **histconn.sql** - Returns returns two histograms with connection information for a given connected user. This is useful to examine the pool of connections of an application. The first histogram reports the sessions by creation time and indicates if session is active or no. The second one lists the session by inactivity time.<br>In a good pool of connections, you should find session existing for a long time and being used almost all the time, i.e, short periods of inactivity. 
 ```
-    @histconn <m/s> <username>
+    @histconn <yes/no> <m/s> <username>
+        yes/no - Summarize or not
         m/s - Indicate the time interval of the buckets of the histogram: it can be in seconds or minutes. 
         username - the name of the connected user.
     e.g.
-        @histconn s user_ecomm
-        @histconn m user_ecomm
+        @histconn yes s user_ecomm
+        @histconn no m user_ecomm
 ``` 
  * **indexes.sql** - Lists details of a table's indexes.
 ***Note:*** *Must previously compile the GET_IND_EXPR function. Code included in the body of the script.*
