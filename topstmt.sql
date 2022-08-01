@@ -17,6 +17,7 @@ DEFINE SORT="CPU_ELAPSED"
 DEFINE SORT="AVG_CPU_TIME"
 DEFINE SORT="EXEC"
 DEFINE SORT="LIO"
+DEFINE SORT="COPIES"
 DEFINE SORT="CPU_TIME"
 DEFINE SORT="AVG_LIO"
 DEFINE SORT="AVG_EXEC"
@@ -72,7 +73,6 @@ WITH /* Top Statements v5 */ CURSORES AS
     ,TRUNC(DECODE(SUM(S.EXECUTIONS),NULL,0,0,0,SUM(S.ELAPSED_TIME)/1000/SUM(S.EXECUTIONS))) ELA_TIME_BY_EXEC
     ,MAX(TRIM(REPLACE( REPLACE( S.SQL_TEXT, chr(10), ' ' ), chr(13), '' ))) SQL_TEXT 
     ,COUNT(*) COPIES
-    --,S.force_matching_signature
   FROM GV$SQLAREA S
   WHERE S.force_matching_signature > 0
   GROUP BY S.force_matching_signature
@@ -133,8 +133,7 @@ SELECT
   ,C.CACHE_TIME
   ,C.SQL_ID
   ,C.SQL_TEXT
-  --,force_matching_signature
- /* ,LPAD(
+  /* ,LPAD(
    decode(sign(1e+12-C.LINHAS), -1, to_char(C.LINHAS/1e+09, 'fm999g999g999' ) || 'G',
    decode(sign(1e+09-C.LINHAS), -1, to_char(C.LINHAS/1e+06, 'fm999g999g999' ) || 'M',
    decode(sign(1e+06-C.LINHAS), -1, to_char(C.LINHAS/1e+03, 'fm999g999g999' ) || 'K',
@@ -157,6 +156,7 @@ ORDER BY
 		WHEN 'AVG_CPU_TIME' THEN C.CPU_TIME_BY_EXEC
 		WHEN 'CPU_TIME' THEN C.CPU_TIME 
 		WHEN 'AVG_EXEC' THEN C.EXECS_BY_SEC
+    WHEN 'COPIES' THEN C.COPIES
 		WHEN 'EXEC' THEN C.EXECUTIONS
 		WHEN 'LIO' THEN C.BUFFER_GETS
 		ELSE /*AVG_LIO*/ C.GETS_BY_EXEC
