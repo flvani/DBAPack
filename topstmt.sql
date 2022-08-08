@@ -100,7 +100,7 @@ WITH /* Top Statements v5 */ CURSORES AS
 )
 SELECT
    ROWNUM "Rank"
-  ,C.user_name
+  ,C.user_name PARSING_USER
   ,LPAD(
    decode(sign(1e+12-C.GETS_BY_EXEC), -1, to_char(C.GETS_BY_EXEC/1e+09, 'fm999g999g999' ) || 'G',
    decode(sign(1e+09-C.GETS_BY_EXEC), -1, to_char(C.GETS_BY_EXEC/1e+06, 'fm999g999g999' ) || 'M',
