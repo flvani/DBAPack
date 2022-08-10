@@ -276,10 +276,25 @@ The *login.sql* file is reponsible for several environment sets. You should edit
  * **sort.sql**
  * **stragg.sql**
  * **tops[a|ab|b|k].sql**
- * **topstmt.sql ** - Reports the top N queries with the highest level of logical reads by execution. This script also considers a minimum number of executions of each statement as well a minimum executation rate over the time since when the query was first loaded in the shared pool. Those limits are hardcoded and initially adjusted to 10 and 0,1 (one execution every ten seconds)
+
+ * **topstmt.sql ** - Reports the main queries for an app, ordered by some criterion of interest. This script also considers a minimum number of executions of each statement, as well as a minimum rate of execution over the time since the query was first loaded into the shared pool. These thresholds are are hardcoded and initially set to 10 and 0.1 (ten executions, with at leat one run at every ten seconds). One can edit the source of the script and change all those default values.
+
+Regarding the sorting options, they are as follows:
+
+SORT="AVG_CPU_ELAPSED" --> AVERAGE RESPONSE TIME
+SORT="CPU_ELAPSED" --> ACCUMULATED RESPONSE TIME
+SORT="AVG_CPU_TIME" --> AVERAGE CPU USAGE TIME
+SORT="CPU_TIME" --> ACCUMULATED CPU TIME
+SORT="EXEC" --> NUMBER OF EXECUTIONS
+SORT="LIO" --> NUMBER OF LOGIC READINGS
+SORT="COPIES" --> NUMBER OF COPIES IN CACHE
+SORT="AVG_EXEC" --> AVERAGE EXECUTIONS PER SECOND
+SORT="AVG_LIO" --> AVERAGE LOGICAL READS PER RUN
+
  ```
+        @topstmt <parsing-user>
     e.g.
-        @topstmt
+        @topstmt %
 ```  
 
  * **transactions.sql**
